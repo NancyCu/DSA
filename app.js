@@ -24,6 +24,8 @@ const searchingAlgorithms = {
 // Trees (BST)
 let bstSession = null; // holds {steps, state, api}
 let bstNodeEls = new Map(); // id -> HTMLElement, persistent for animations
+let bstTravelEl = null; // DOM element for traveling insert bubble
+let bstTravelKey = null;
 
 const formatName = (key) =>
   key
@@ -692,4 +694,63 @@ if (window.ResizeObserver) {
       renderBSTStep();
     }
   });
+
+    // Traveling bubble logic for insert
+    if (highlight && (highlight.op === 'insert-visit' || highlight.op === 'cmp' || highlight.op === 'ret' || highlight.op === 'insert-new')) {
+      // The key being inserted is in highlight.key during insert steps
+      const key = highlight.key;
+      if (key != null) {
+        const posForNodeId = (id) => idToPos.get(id) || null;
+        // Ensure element exists
+        if (!bstTravelEl) {
+          bstTravelEl = document.createElement('div');
+          bstTravelEl.className = 'bst-travel';
+          bstTravelEl.style.opacity = '0';
+          treeVisual.appendChild(bstTravelEl);
+        }
+        // set key text if changed
+        if (bstTravelKey !== key) {
+          bstTravelEl.textContent = key;
+          bstTravelKey = key;
+        }
+        // compute target position: current visited node (for visit/cmp), or final new node position (insert-new)
+        let targetPos = null;
+        if (highlight.op === 'insert-new' && highlight.nodeId) {
+          targetPos = posForNodeId(highlight.nodeId);
+        } else if (highlight.nodeId) {
+          targetPos = posForNodeId(highlight.nodeId);
+        }
+        if (targetPos) {
+          // if first time showing, place at root position immediately then fade
+          if (bstTravelEl.style.opacity !== '1' && idToPos.size > 0) {
+            const rootId = (rootForStep && rootForStep.id) ? rootForStep.id : null;
+            const rootPos = rootId ? posForNodeId(rootId) : targetPos;
+            if (rootPos) {
+              bstTravelEl.style.left = `${rootPos.x}px`;
+              bstTravelEl.style.top = `${rootPos.y}px`;
+            }
+            requestAnimationFrame(() => { bstTravelEl.style.opacity = '1'; });
+          }
+          // animate toward target
+          bstTravelEl.style.left = `${targetPos.x}px`;
+          bstTravelEl.style.top = `${targetPos.y}px`;
+        }
+        // remove bubble when insertion completes
+        if (highlight.op === 'insert-new') {
+          // fade out after short delay so users see arrival
+          setTimeout(() => {
+            if (bstTravelEl) {
+              bstTravelEl.style.opacity = '0';
+              setTimeout(() => { bstTravelEl?.remove(); bstTravelEl = null; bstTravelKey = null; }, 250);
+            }
+          }, 250);
+        }
+      }
+    } else {
+      // On non-insert steps, hide bubble if present
+      if (bstTravelEl) {
+        bstTravelEl.style.opacity = '0';
+        setTimeout(() => { bstTravelEl?.remove(); bstTravelEl = null; bstTravelKey = null; }, 250);
+      }
+    }
 }
