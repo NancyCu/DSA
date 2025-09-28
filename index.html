@@ -9,50 +9,89 @@
 <body>
   <header class="topbar">
     <h1>VisuDSA <span class="badge">starter</span></h1>
-    <nav>
-      <label for="algoType">Algorithm Type:</label>
-      <select id="algoType" aria-label="Algorithm Type">
-        <option value="sorting">Sorting</option>
-        <option value="searching">Searching</option>
-        <option value="trees">Trees (BST)</option>
-      </select>
-      <select id="algoSelect" aria-label="Algorithm"></select>
-      <button id="randomBtn" title="Randomize input">🎲 Random</button>
-      <input id="arrayInput" value="5,2,9,1,5,6" aria-label="Array input (comma-separated)" />
-  <button id="loadBtn">Load</button>
-      <label for="searchTarget" id="searchTargetLabel" style="display: none;">Target:</label>
-      <input id="searchTarget" type="number" value="5" style="display: none;" aria-label="Search target" />
-
-  <!-- BST controls (shown in Trees mode) -->
-  <label for="bstValue" id="bstValueLabel" style="display:none;">Value:</label>
-  <input id="bstValue" type="number" value="8" style="display:none;" aria-label="BST value" />
-  <button id="bstInsertBtn" style="display:none;">Insert</button>
-  <button id="bstSearchBtn" style="display:none;">Search</button>
-  <button id="bstClearBtn" style="display:none;">Clear</button>
-    </nav>
   </header>
 
   <main class="grid">
-    <section class="panel" id="vizPanel" aria-label="Visualization">
+    <section class="panel inputs-panel" aria-label="Inputs">
+      <div class="inputs-header">
+        <div class="panel-title">Inputs</div>
+        <button id="inputsToggle" class="inputs-toggle" aria-expanded="true" aria-controls="inputsBody" title="Collapse inputs">▾</button>
+      </div>
+      <div class="inputs-body" id="inputsBody">
+        <div class="inputs-row">
+        <div class="field">
+          <label for="algoType">Algorithm Type</label>
+          <select id="algoType" aria-label="Algorithm Type">
+            <option value="sorting">Sorting</option>
+            <option value="searching">Searching</option>
+            <option value="trees">Trees (BST)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="algoSelect">Algorithm</label>
+          <select id="algoSelect" aria-label="Algorithm"></select>
+        </div>
+        <div class="field grow" id="arrayField">
+          <label for="arrayInput">Array (comma-separated)</label>
+          <input id="arrayInput" value="5,2,9,1,5,6" aria-label="Array input (comma-separated)" inputmode="numeric" pattern="[0-9,\\s-]*" />
+        </div>
+          <div class="field compact-buttons" id="arrayButtons">
+            <label class="size-field" title="Array size for Random">
+              n = <input type="number" id="arraySize" min="3" max="50" step="1" value="10" inputmode="numeric" />
+            </label>
+            <button id="randomBtn" title="Randomize input">🎲 Random</button>
+            <button id="loadBtn">Load</button>
+            <label class="sorted-toggle" title="Generate sorted after random">
+              <input type="checkbox" id="sortedToggle" /> Sorted
+            </label>
+            <label class="sorted-toggle" title="Vibrate on key actions">
+              <input type="checkbox" id="hapticsToggle" /> Haptics
+            </label>
+            <button id="resetBtn" title="Reset to defaults">Reset</button>
+          </div>
+        <div class="field" id="searchField">
+          <label for="searchTarget" id="searchTargetLabel" style="display: none;">Target</label>
+          <input id="searchTarget" type="number" value="5" style="display: none;" aria-label="Search target" inputmode="numeric" />
+        </div>
+        <div class="field" id="bstField">
+          <!-- BST controls (shown in Trees mode) -->
+          <label for="bstValue" id="bstValueLabel" style="display:none;">Value</label>
+          <div class="bst-buttons">
+            <input id="bstValue" type="number" value="8" style="display:none;" aria-label="BST value" inputmode="numeric" />
+            <button id="bstInsertBtn" style="display:none;">Insert</button>
+            <button id="bstSearchBtn" style="display:none;">Search</button>
+            <button id="bstClearBtn" style="display:none;">Clear</button>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div class="mini-toolbar" id="miniToolbar" aria-hidden="true">
+        <button id="miniRandom" title="Randomize input">🎲</button>
+        <button id="miniLoad" title="Load input">⤴</button>
+        <button id="miniPlay" title="Play/Pause">▶</button>
+      </div>
+    </section>
+    <section class="panel" id="vizPanel" aria-labelledby="vizTitle">
+  <div id="vizTitle" class="panel-title" style="margin-bottom:6px">Visualization</div>
   <div id="visual"></div>
       <div id="searchVisual" style="display: none;"></div>
   <div id="treeVisual" style="display:none;"></div>
       <div class="controls">
-        <button id="firstBtn">⏮ First</button>
-        <button id="prevBtn">◀ Prev</button>
-        <button id="playBtn">▶ Play</button>
-        <button id="nextBtn">Next ▶</button>
-        <button id="lastBtn">Last ⏭</button>
+        <button id="firstBtn" title="First step">⏮ First</button>
+        <button id="prevBtn" title="Previous step">◀ Prev</button>
+        <button id="playBtn" title="Play/Pause" aria-pressed="false">▶ Play</button>
+        <button id="nextBtn" title="Next step">Next ▶</button>
+        <button id="lastBtn" title="Last step">Last ⏭</button>
         <label class="speed">
           Speed:
           <input id="speedRange" type="range" min="100" max="1500" step="50" value="600">
         </label>
-        <span id="stepCounter" class="muted">Step 0/0</span>
+        <span id="stepCounter" class="muted" aria-live="polite">Step 0/0</span>
       </div>
     </section>
 
-    <section class="panel code" aria-label="Code">
-      <div class="panel-title">Pseudocode</div>
+    <section class="panel code" aria-labelledby="codeTitle">
+      <div id="codeTitle" class="panel-title">Pseudocode</div>
       <pre id="codePane"><code></code></pre>
       <div class="panel-sub">
         <div class="panel-title">Recursion Analysis</div>

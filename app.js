@@ -69,6 +69,17 @@ const analysisNumeric = document.getElementById('analysisNumeric');
 const analysisC = document.getElementById('analysisC');
 // Track last highlighted analysis row to animate changes
 let analysisLastHL = null;
+// Inputs panel controls
+const inputsToggle = document.getElementById('inputsToggle');
+const inputsBody = document.getElementById('inputsBody');
+const sortedToggle = document.getElementById('sortedToggle');
+const arraySizeInput = document.getElementById('arraySize');
+const resetBtn = document.getElementById('resetBtn');
+const miniToolbar = document.getElementById('miniToolbar');
+const miniRandom = document.getElementById('miniRandom');
+const miniLoad = document.getElementById('miniLoad');
+const miniPlay = document.getElementById('miniPlay');
+const hapticsToggle = document.getElementById('hapticsToggle');
 
 // ---- Persistence for analysis controls ----
 const LS_KEYS = {
@@ -79,6 +90,10 @@ const LS_KEYS = {
   algo_sorting: 'visudsa.ui.algo.sorting',
   algo_searching: 'visudsa.ui.algo.searching',
   algo_trees: 'visudsa.ui.algo.trees',
+  inputsCollapsed: 'visudsa.ui.inputsCollapsed',
+  sortedAfterRandom: 'visudsa.ui.sortedAfterRandom',
+  randomSize: 'visudsa.ui.randomSize',
+  haptics: 'visudsa.ui.haptics',
 };
 try {
   const savedNum = localStorage.getItem(LS_KEYS.numeric);
@@ -87,6 +102,42 @@ try {
   if (savedC != null && analysisC) analysisC.value = savedC;
   const savedMode = localStorage.getItem(LS_KEYS.mode);
   if (savedMode && analysisModeSel) analysisModeSel.value = savedMode;
+  const collapsed = localStorage.getItem(LS_KEYS.inputsCollapsed) === '1';
+  if (inputsBody && inputsToggle) {
+    if (collapsed) {
+      inputsBody.classList.add('collapsed');
+      inputsToggle.setAttribute('aria-expanded','false');
+      inputsToggle.textContent = '▸';
+      if (miniToolbar) miniToolbar.style.display = 'flex';
+    } else {
+      inputsToggle.setAttribute('aria-expanded','true');
+      inputsToggle.textContent = '▾';
+      if (miniToolbar) miniToolbar.style.display = 'none';
+    }
+  }
+  const sortedPref = localStorage.getItem(LS_KEYS.sortedAfterRandom);
+  if (sortedPref != null && sortedToggle) sortedToggle.checked = sortedPref === '1';
+  const savedSize = localStorage.getItem(LS_KEYS.randomSize);
+  if (savedSize != null && arraySizeInput) arraySizeInput.value = savedSize;
+  // Haptics preference: default enable on touch devices if not saved
+  const savedH = localStorage.getItem(LS_KEYS.haptics);
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (hapticsToggle) {
+    if (savedH != null) hapticsToggle.checked = savedH === '1';
+    else hapticsToggle.checked = isTouch;
+  }
+} catch {}
+// Auto-collapse by default on small screens if no preference saved
+try {
+  const hasPref = localStorage.getItem(LS_KEYS.inputsCollapsed) !== null;
+  if (!hasPref && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+    if (inputsBody && inputsToggle && !inputsBody.classList.contains('collapsed')) {
+      inputsBody.classList.add('collapsed');
+      inputsToggle.setAttribute('aria-expanded','false');
+      inputsToggle.textContent = '▸';
+      if (miniToolbar) miniToolbar.style.display = 'flex';
+    }
+  }
 } catch {}
 
 function populateAlgorithmSelect() {
@@ -116,19 +167,23 @@ function populateAlgorithmSelect() {
   // Show/hide search target input
   const isSearching = currentType === 'searching';
   const isTrees = currentType === 'trees';
-  searchTarget.style.display = isSearching ? 'inline' : 'none';
+  const searchField = document.getElementById('searchField');
+  if (searchField) searchField.style.display = isSearching ? 'grid' : 'none';
+  searchTarget.style.display = isSearching ? 'block' : 'none';
   searchTargetLabel.style.display = isSearching ? 'inline' : 'none';
   visual.style.display = isSearching || isTrees ? 'none' : 'block';
   searchVisual.style.display = isSearching ? 'block' : 'none';
   treeVisual.style.display = isTrees ? 'block' : 'none';
 
   // toggle BST controls
+  const bstField = document.getElementById('bstField');
+  if (bstField) bstField.style.display = isTrees ? 'grid' : 'none';
   const bstControls = [bstValueLabel, bstValue, bstInsertBtn, bstSearchBtn, bstClearBtn];
-  bstControls.forEach(el => el.style.display = isTrees ? (el.tagName === 'INPUT' || el.tagName === 'LABEL' ? 'inline' : 'inline-block') : 'none');
+  bstControls.forEach(el => el.style.display = isTrees ? (el.tagName === 'INPUT' || el.tagName === 'LABEL' ? 'block' : 'inline-block') : 'none');
 
   // Toggle array controls for Trees mode
-  const arrayControls = [algoSelect, randomBtn, arrayInput, loadBtn];
-  arrayControls.forEach(el => el.style.display = isTrees ? 'none' : (el === algoSelect ? 'inline-block' : 'inline'));
+  const arrayControls = [document.getElementById('arrayField'), document.getElementById('arrayButtons')];
+  arrayControls.forEach(el => { if (el) el.style.display = isTrees ? 'none' : 'grid'; });
 
   if (isTrees) {
     ensureBSTInitialized();
@@ -786,6 +841,89 @@ if (analysisC) {
   analysisC.onchange = () => { try { localStorage.setItem(LS_KEYS.c, analysisC.value); } catch {} renderCurrentStep(); };
 }
 
+// Inputs panel toggle
+if (inputsToggle && inputsBody) {
+  inputsToggle.onclick = () => {
+    const willCollapse = !inputsBody.classList.contains('collapsed');
+    inputsBody.classList.toggle('collapsed', willCollapse);
+    inputsToggle.setAttribute('aria-expanded', willCollapse ? 'false' : 'true');
+    inputsToggle.textContent = willCollapse ? '▸' : '▾';
+    try { localStorage.setItem(LS_KEYS.inputsCollapsed, willCollapse ? '1' : '0'); } catch {}
+    if (miniToolbar) miniToolbar.style.display = willCollapse ? 'flex' : 'none';
+    // Auto-focus primary input when expanding on mobile
+    if (!willCollapse) {
+      setTimeout(() => {
+        const t = algoType.value;
+        if (t === 'sorting') arrayInput?.focus();
+        else if (t === 'searching') searchTarget?.focus();
+        else if (t === 'trees') bstValue?.focus();
+      }, 50);
+    }
+  };
+}
+if (sortedToggle) {
+  sortedToggle.onchange = () => { try { localStorage.setItem(LS_KEYS.sortedAfterRandom, sortedToggle.checked ? '1' : '0'); } catch {} };
+}
+if (arraySizeInput) {
+  arraySizeInput.onchange = () => {
+    let v = parseInt(arraySizeInput.value);
+    if (!Number.isFinite(v)) v = 10;
+    v = Math.max(3, Math.min(50, v));
+    arraySizeInput.value = String(v);
+    try { localStorage.setItem(LS_KEYS.randomSize, String(v)); } catch {}
+  };
+}
+
+if (hapticsToggle) {
+  hapticsToggle.onchange = () => { try { localStorage.setItem(LS_KEYS.haptics, hapticsToggle.checked ? '1' : '0'); } catch {} };
+}
+
+// Haptic feedback utility
+function haptic(type = 'tap') {
+  try {
+    if (!hapticsToggle?.checked) return;
+    if (!('vibrate' in navigator)) return;
+    const patterns = {
+      tap: 15,
+      tick: 8,
+      success: [18, 24, 18],
+      error: [30, 45, 30],
+      long: 60,
+    };
+    navigator.vibrate(patterns[type] ?? patterns.tap);
+  } catch {}
+}
+
+if (resetBtn) {
+  resetBtn.onclick = () => {
+    try {
+      // Clear persisted UI/analysis preferences
+      Object.values(LS_KEYS).forEach(k => localStorage.removeItem(k));
+    } catch {}
+    // Restore defaults
+    if (inputsBody && inputsToggle) {
+      inputsBody.classList.remove('collapsed');
+      inputsToggle.setAttribute('aria-expanded','true');
+      inputsToggle.textContent = '▾';
+    }
+    if (sortedToggle) sortedToggle.checked = false;
+    if (arraySizeInput) arraySizeInput.value = '10';
+    if (analysisNumeric) analysisNumeric.checked = false;
+    if (analysisC) analysisC.value = '8';
+    if (analysisModeSel) analysisModeSel.value = 'avg';
+    // Reset algorithm type and selection
+    algoType.value = 'sorting';
+    populateAlgorithmSelect();
+    // Reset array and target
+    arrayInput.value = '5,2,9,1,5,6';
+    searchTarget.value = '5';
+    // Rebuild steps
+    const arr = parseArray(arrayInput.value);
+    buildSteps(algoSelect.value, arr, parseInt(searchTarget.value));
+    renderCurrentStep();
+  };
+}
+
 function buildSteps(algoKey, arr, target = null) {
   const currentType = algoType.value;
   if (currentType === 'trees') {
@@ -824,6 +962,7 @@ function setStep(i) {
 function stopPlaying() {
   playing = false;
   playBtn.textContent = '▶ Play';
+  playBtn.setAttribute('aria-pressed','false');
   if (timer) {
     clearTimeout(timer);
     timer = null;
@@ -856,6 +995,13 @@ algoType.onchange = () => {
   } else {
     buildSteps(algoSelect.value, arr, target);
   }
+  // Focus relevant field on type change
+  setTimeout(() => {
+    const t = algoType.value;
+    if (t === 'sorting') arrayInput?.focus();
+    else if (t === 'searching') searchTarget?.focus();
+    else if (t === 'trees') bstValue?.focus();
+  }, 50);
 };
 
 algoSelect.onchange = () => {
@@ -871,21 +1017,27 @@ algoSelect.onchange = () => {
 };
 
 randomBtn.onclick = () => {
-  const arr = randomArray(10);
-  arrayInput.value = arr.join(', ');
+  const n = Math.max(3, Math.min(50, parseInt(arraySizeInput?.value) || 10));
+  const arr = randomArray(n);
+  const makeSorted = !!sortedToggle?.checked;
+  const finalArr = makeSorted ? [...arr].sort((a,b)=>a-b) : arr;
+  arrayInput.value = finalArr.join(', ');
   const target = parseInt(searchTarget.value) || arr[Math.floor(Math.random() * arr.length)];
   searchTarget.value = target;
   stopPlaying();
-  buildSteps(algoSelect.value, arr, target);
+  buildSteps(algoSelect.value, finalArr, target);
+  haptic('tick');
 };
 
 loadBtn.onclick = () => {
   const arr = parseArray(arrayInput.value);
   if (arr.length === 0) {
+  haptic('tick');
     alert('Please enter numbers (comma-separated).');
     return;
   }
   const target = parseInt(searchTarget.value);
+  haptic('tick');
   stopPlaying();
   buildSteps(algoSelect.value, arr, target);
 };
@@ -894,6 +1046,7 @@ searchTarget.onchange = () => {
   const arr = parseArray(arrayInput.value);
   const target = parseInt(searchTarget.value);
   stopPlaying();
+  haptic('tick');
   buildSteps(algoSelect.value, arr, target);
 };
 
@@ -921,6 +1074,7 @@ bstInsertBtn.onclick = () => {
   bstSession.api.insert(v);
   idx = before; // jump to first new step
   renderBSTStep();
+  haptic('tick');
 };
 
 bstSearchBtn.onclick = () => {
@@ -931,6 +1085,7 @@ bstSearchBtn.onclick = () => {
   bstSession.api.search(v);
   idx = before;
   renderBSTStep();
+  haptic('tick');
 };
 
 bstClearBtn.onclick = () => {
@@ -938,34 +1093,41 @@ bstClearBtn.onclick = () => {
   bstSession = createBST([]);
   idx = 0;
   renderBSTStep();
+  haptic('long');
 };
 
 firstBtn.onclick = () => {
   stopPlaying();
   setStep(0);
+  haptic('tick');
 };
 prevBtn.onclick = () => {
   stopPlaying();
   setStep(idx - 1);
+  haptic('tick');
 };
 nextBtn.onclick = () => {
   stopPlaying();
   setStep(idx + 1);
+  haptic('tick');
 };
 lastBtn.onclick = () => {
   stopPlaying();
   setStep(steps.length - 1);
+  haptic('tick');
 };
 
 playBtn.onclick = () => {
   if (!steps.length) return;
   playing = !playing;
   playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
+  playBtn.setAttribute('aria-pressed', playing ? 'true' : 'false');
   if (playing) {
     playLoop();
   } else {
     stopPlaying();
   }
+  haptic('tick');
 };
 
 // Boot: restore algo type and selection
@@ -987,6 +1149,11 @@ const defaultAlgo = algoSelect.value || Object.keys(sortingAlgorithms)[0];
 const initialArr = parseArray(arrayInput.value);
 const initialTarget = parseInt(searchTarget.value);
 buildSteps(defaultAlgo, initialArr, initialTarget);
+
+// Mini toolbar wiring (reuse existing handlers)
+if (miniRandom) miniRandom.onclick = () => { randomBtn.click(); };
+if (miniLoad) miniLoad.onclick = () => { loadBtn.click(); };
+if (miniPlay) miniPlay.onclick = () => { playBtn.click(); };
 
 // Re-render tree on container resize for responsiveness
 if (window.ResizeObserver) {
