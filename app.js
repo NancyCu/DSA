@@ -71,6 +71,7 @@ const analysisC = document.getElementById('analysisC');
 let analysisLastHL = null;
 // Inputs panel controls
 const inputsToggle = document.getElementById('inputsToggle');
+const inputsPanel = document.querySelector('.inputs-panel');
 const inputsBody = document.getElementById('inputsBody');
 const sortedToggle = document.getElementById('sortedToggle');
 const arraySizeInput = document.getElementById('arraySize');
@@ -80,6 +81,8 @@ const miniRandom = document.getElementById('miniRandom');
 const miniLoad = document.getElementById('miniLoad');
 const miniPlay = document.getElementById('miniPlay');
 const hapticsToggle = document.getElementById('hapticsToggle');
+const bstFitToggle = document.getElementById('bstFitToggle');
+const bstFitWrap = document.getElementById('bstFitWrap');
 
 // ---- Persistence for analysis controls ----
 const LS_KEYS = {
@@ -94,6 +97,8 @@ const LS_KEYS = {
   sortedAfterRandom: 'visudsa.ui.sortedAfterRandom',
   randomSize: 'visudsa.ui.randomSize',
   haptics: 'visudsa.ui.haptics',
+  bstFit: 'visudsa.ui.bstFit',
+  bstFitUserSet: 'visudsa.ui.bstFit.userSet',
 };
 try {
   const savedNum = localStorage.getItem(LS_KEYS.numeric);
@@ -109,10 +114,12 @@ try {
       inputsToggle.setAttribute('aria-expanded','false');
       inputsToggle.textContent = '▸';
       if (miniToolbar) miniToolbar.style.display = 'flex';
+      if (inputsPanel) inputsPanel.classList.add('is-collapsed');
     } else {
       inputsToggle.setAttribute('aria-expanded','true');
       inputsToggle.textContent = '▾';
       if (miniToolbar) miniToolbar.style.display = 'none';
+      if (inputsPanel) inputsPanel.classList.remove('is-collapsed');
     }
   }
   const sortedPref = localStorage.getItem(LS_KEYS.sortedAfterRandom);
@@ -126,6 +133,17 @@ try {
     if (savedH != null) hapticsToggle.checked = savedH === '1';
     else hapticsToggle.checked = isTouch;
   }
+  const savedFit = localStorage.getItem(LS_KEYS.bstFit);
+  if (bstFitToggle) {
+    if (savedFit == null) {
+      const preferFit = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      bstFitToggle.checked = preferFit;
+      try { localStorage.setItem(LS_KEYS.bstFit, preferFit ? '1' : '0'); } catch {}
+      try { localStorage.setItem(LS_KEYS.bstFitUserSet, '0'); } catch {}
+    } else {
+      bstFitToggle.checked = savedFit === '1';
+    }
+  }
 } catch {}
 // Auto-collapse by default on small screens if no preference saved
 try {
@@ -136,6 +154,7 @@ try {
       inputsToggle.setAttribute('aria-expanded','false');
       inputsToggle.textContent = '▸';
       if (miniToolbar) miniToolbar.style.display = 'flex';
+      if (inputsPanel) inputsPanel.classList.add('is-collapsed');
     }
   }
 } catch {}
@@ -174,6 +193,7 @@ function populateAlgorithmSelect() {
   visual.style.display = isSearching || isTrees ? 'none' : 'block';
   searchVisual.style.display = isSearching ? 'block' : 'none';
   treeVisual.style.display = isTrees ? 'block' : 'none';
+  if (bstFitWrap) bstFitWrap.style.display = isTrees ? 'inline-flex' : 'none';
 
   // toggle BST controls
   const bstField = document.getElementById('bstField');
@@ -190,6 +210,8 @@ function populateAlgorithmSelect() {
     renderBSTStep();
     renderComplexity({ complexity: { best: 'O(log n)', avg: 'O(log n)', worst: 'O(n)' }, space: 'O(h)' });
     renderCode(bstSession?.pseudocode ?? [], []);
+    // If entering trees mode in portrait and no explicit user preference, auto-enable fit
+    maybeAutoEnableFit();
   }
 }
 
@@ -427,23 +449,48 @@ function edgesFrom(root) {
 
 function renderBSTStep() {
   treeVisual.innerHTML = '';
+  // Wrap layers to allow scaling
+  const zoomWrap = document.createElement('div');
+  zoomWrap.className = 'zoom-wrap';
+  treeVisual.appendChild(zoomWrap);
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.classList.add('edges-layer');
-  treeVisual.appendChild(svg);
+  zoomWrap.appendChild(svg);
   let nodesLayer = document.createElement('div');
   nodesLayer.className = 'bst-nodes-layer';
-  treeVisual.appendChild(nodesLayer);
+  zoomWrap.appendChild(nodesLayer);
   const w = treeVisual.clientWidth || 700;
   const h = treeVisual.clientHeight || 400;
   const step = (bstSession.steps && bstSession.steps[idx]) || null;
   const rootForStep = step?.tree || bstSession.state.root;
   // Compute depth to fit vertical space
   const d = Math.max(1, depthOf(rootForStep));
-  const levelH = Math.max(56, Math.min(110, (h - 40) / d));
+  // Responsive vertical spacing: allow tighter packing on mobile
+  const isNarrow = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+  const minLevel = isNarrow ? 44 : 56;
+  const maxLevel = isNarrow ? 96 : 110;
+  const levelH = Math.max(minLevel, Math.min(maxLevel, (h - 40) / d));
   // Adaptive horizontal gap by viewport width
-  const minGap = Math.max(36, Math.min(90, w / 12));
-  const nodes = computePositions(rootForStep, w, levelH, { minGap, padding: Math.max(10, Math.min(24, w * 0.03)) });
+  const minGap = Math.max(isNarrow ? 28 : 36, Math.min(isNarrow ? 72 : 90, w / 12));
+  const nodes = computePositions(rootForStep, w, levelH, { minGap, padding: Math.max(8, Math.min(isNarrow ? 18 : 24, w * 0.03)) });
   const idToPos = new Map(nodes.map(n => [n.id, n]));
+
+  // Auto-zoom to fit if enabled
+  if (bstFitToggle?.checked && nodes.length > 0) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of nodes) { minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x); minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y); }
+    // Add padding margins around content box
+    const margin = 16;
+    const contentW = Math.max(1, (maxX - minX) + margin * 2);
+    const contentH = Math.max(1, (maxY - minY) + margin * 2);
+    const availW = w - 16; // account for panel padding
+    const availH = h - 16;
+    const scale = Math.min(1, Math.max(0.4, Math.min(availW / contentW, availH / contentH)));
+    // Center the content by translating to start at (margin, margin)
+    const offsetX = Math.max(0, (availW - contentW * scale) / 2) - (minX - margin) * scale;
+    const offsetY = Math.max(0, (availH - contentH * scale) / 2) - (minY - margin) * scale;
+    zoomWrap.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+  }
 
   // level guide lines
   const depthMax = Math.max(1, d);
@@ -845,11 +892,12 @@ if (analysisC) {
 if (inputsToggle && inputsBody) {
   inputsToggle.onclick = () => {
     const willCollapse = !inputsBody.classList.contains('collapsed');
-    inputsBody.classList.toggle('collapsed', willCollapse);
+  inputsBody.classList.toggle('collapsed', willCollapse);
     inputsToggle.setAttribute('aria-expanded', willCollapse ? 'false' : 'true');
     inputsToggle.textContent = willCollapse ? '▸' : '▾';
     try { localStorage.setItem(LS_KEYS.inputsCollapsed, willCollapse ? '1' : '0'); } catch {}
     if (miniToolbar) miniToolbar.style.display = willCollapse ? 'flex' : 'none';
+  if (inputsPanel) inputsPanel.classList.toggle('is-collapsed', willCollapse);
     // Auto-focus primary input when expanding on mobile
     if (!willCollapse) {
       setTimeout(() => {
@@ -877,6 +925,41 @@ if (arraySizeInput) {
 if (hapticsToggle) {
   hapticsToggle.onchange = () => { try { localStorage.setItem(LS_KEYS.haptics, hapticsToggle.checked ? '1' : '0'); } catch {} };
 }
+if (bstFitToggle) {
+  bstFitToggle.onchange = () => {
+    try { localStorage.setItem(LS_KEYS.bstFit, bstFitToggle.checked ? '1' : '0'); } catch {}
+    try { localStorage.setItem(LS_KEYS.bstFitUserSet, '1'); } catch {}
+    if (algoType.value === 'trees') renderBSTStep();
+  };
+}
+
+// Auto-enable Fit on rotation into portrait if user hasn't explicitly set it
+function maybeAutoEnableFit() {
+  try {
+    if (!bstFitToggle) return;
+    const userSet = localStorage.getItem(LS_KEYS.bstFitUserSet) === '1';
+    if (userSet) return;
+    const isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+    const isNarrow = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    if ((isPortrait || isNarrow) && !bstFitToggle.checked) {
+      bstFitToggle.checked = true;
+      localStorage.setItem(LS_KEYS.bstFit, '1');
+      if (algoType.value === 'trees') renderBSTStep();
+    }
+  } catch {}
+}
+
+try {
+  const mql = window.matchMedia && window.matchMedia('(orientation: portrait)');
+  if (mql && mql.addEventListener) {
+    mql.addEventListener('change', (e) => { if (e.matches) maybeAutoEnableFit(); });
+  } else {
+    window.addEventListener('resize', () => {
+      const isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+      if (isPortrait) maybeAutoEnableFit();
+    });
+  }
+} catch {}
 
 // Haptic feedback utility
 function haptic(type = 'tap') {
@@ -906,6 +989,7 @@ if (resetBtn) {
       inputsToggle.setAttribute('aria-expanded','true');
       inputsToggle.textContent = '▾';
     }
+    if (inputsPanel) inputsPanel.classList.remove('is-collapsed');
     if (sortedToggle) sortedToggle.checked = false;
     if (arraySizeInput) arraySizeInput.value = '10';
     if (analysisNumeric) analysisNumeric.checked = false;

@@ -11,6 +11,9 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .topbar button:hover, .controls button:hover{filter:brightness(1.1)}
 .grid{display:grid;grid-template-columns:1.5fr 1fr 0.8fr;gap:12px;padding:12px;max-width:1200px;margin:0 auto}
 .panel{background:var(--panel);border:1px solid #1f2a44;border-radius:12px;padding:12px;min-height:200px}
+.inputs-panel{position:relative;min-height:auto}
+.inputs-panel.is-collapsed{min-height:auto;padding-bottom:8px}
+.inputs-panel.is-collapsed .inputs-header{margin-bottom:0}
 .inputs-panel .inputs-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .inputs-panel .field{display:flex;flex-direction:column;gap:6px}
 .inputs-panel .field.grow{grid-column:1/-1}
@@ -29,12 +32,15 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .inputs-body.collapsed{max-height:0; opacity:.0; padding-top:0; padding-bottom:0}
 .sorted-toggle{display:flex;align-items:center;gap:6px;color:#cfe1ff;border:1px solid #24365e;border-radius:8px;padding:8px 10px}
 .sorted-toggle input{accent-color:#71b7ff}
-.mini-toolbar{display:none;gap:8px;position:absolute;right:16px;top:8px;background:rgba(16,26,51,0.9);border:1px solid #24365e;border-radius:999px;padding:6px 8px;z-index:5}
+.mini-toolbar{display:none;gap:8px;position:absolute;right:12px;top:10px;background:rgba(16,26,51,0.9);border:1px solid #24365e;border-radius:999px;padding:6px 8px;z-index:5}
 .mini-toolbar button{background:#162541;border:1px solid #24365e;color:#e7eefc;padding:6px 10px;border-radius:999px;cursor:pointer}
 #visual, #searchVisual{height:320px;display:flex;align-items:flex-end;gap:6px;padding:12px;border:1px dashed #24365e;border-radius:10px;overflow-x:auto}
-#treeVisual{height:min(56vh, 520px);min-height:320px;position:relative;border:1px dashed #24365e;border-radius:10px;padding:12px;background:rgba(0,0,0,0.1)}
+#treeVisual{height:min(56vh, 520px);min-height:320px;position:relative;border:1px dashed #24365e;border-radius:10px;padding:12px;background:rgba(0,0,0,0.1);overflow:auto}
 #treeVisual svg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #treeVisual .bst-nodes-layer{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2}
+/* When we scale the tree, center and smooth */
+#treeVisual .zoom-wrap{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0}
+#treeVisual .zoom-wrap svg,#treeVisual .zoom-wrap .bst-nodes-layer{transform-origin:0 0}
 .bst-node{position:absolute;transform:translate(-50%, -50%);min-width:36px;min-height:36px;border-radius:999px;background:#1b3f79;border:2px solid #24365e;display:flex;align-items:center;justify-content:center;color:#e7eefc;font-weight:700;transition:left .35s ease, top .35s ease, transform .2s ease, opacity .25s ease;z-index:3;will-change:left, top, transform}
 .bst-node.current{outline:2px solid var(--accent)}
 .bst-node.new{outline:2px dashed var(--warn)}
@@ -112,7 +118,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.inputs-panel .inputs-row{grid-template-columns:1fr}
 	.inputs-panel .field.grow{grid-column:auto}
 	#visual, #searchVisual{height:220px}
-	#treeVisual{height:60vh;min-height:340px}
+	#treeVisual{height:58vh;min-height:300px}
 	.topbar h1{font-size:18px}
 	.controls{position:sticky;bottom:0;background:rgba(15,22,39,0.9);backdrop-filter:saturate(1.2) blur(6px);padding:8px;border-radius:10px;margin-top:12px}
 	.controls button{padding:10px 12px}
@@ -123,6 +129,9 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 @media (max-width: 640px){
 	.inputs-panel input,.inputs-panel select{padding:12px;font-size:16px}
 	.inputs-panel button{padding:12px 14px}
+	#treeVisual{height:56vh;min-height:260px}
+	.bst-node{min-width:28px;min-height:28px;font-size:12px}
+	svg .edge-label{font-size:9px}
 	.bar{width:24px;margin-right:4px}
 	.array-element{min-width:44px;padding:10px 6px}
 	.pointer-label{min-width:44px}
