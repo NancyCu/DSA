@@ -479,17 +479,19 @@ function renderBSTStep() {
   if (bstFitToggle?.checked && nodes.length > 0) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const n of nodes) { minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x); minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y); }
-    // Add padding margins around content box
+    // Expand bounds with a visual margin
     const margin = 16;
-    const contentW = Math.max(1, (maxX - minX) + margin * 2);
-    const contentH = Math.max(1, (maxY - minY) + margin * 2);
-    const availW = w - 16; // account for panel padding
-    const availH = h - 16;
-    const scale = Math.min(1, Math.max(0.4, Math.min(availW / contentW, availH / contentH)));
-    // Center the content by translating to start at (margin, margin)
-    const offsetX = Math.max(0, (availW - contentW * scale) / 2) - (minX - margin) * scale;
-    const offsetY = Math.max(0, (availH - contentH * scale) / 2) - (minY - margin) * scale;
-    zoomWrap.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    const bx = minX - margin;
+    const by = minY - margin;
+    const bw = Math.max(1, (maxX - minX) + margin * 2);
+    const bh = Math.max(1, (maxY - minY) + margin * 2);
+    const scaleBase = Math.min(w / bw, h / bh);
+    // Allow modest upscaling to fill the area better on mobile
+    const scale = Math.max(0.35, Math.min(scaleBase, 1.4));
+    // Center content after scaling
+    const cx = (w - bw * scale) / 2 - bx * scale;
+    const cy = (h - bh * scale) / 2 - by * scale;
+    zoomWrap.style.transform = `translate(${cx}px, ${cy}px) scale(${scale})`;
   }
 
   // level guide lines
