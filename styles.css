@@ -20,7 +20,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .bst-node.new{outline:2px dashed var(--warn)}
 .bst-node.found{outline:3px solid var(--good)}
 /* Traveling key bubble during insert */
-.bst-travel{position:absolute;transform:translate(-50%, -50%);min-width:32px;min-height:32px;border-radius:999px;background:#0f2419;border:2px solid var(--accent);color:#e7eefc;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:4;transition:left .35s ease, top .35s ease, opacity .2s ease}
+.bst-travel{position:absolute;transform:translate(-50%, -50%);min-width:32px;min-height:32px;border-radius:999px;background:#0f2419;border:2px solid var(--accent);color:#e7eefc;display:flex;align-items:center;justify-content:center;font-weight:700;z-index:4;transition:left .35s ease, top .35s ease, opacity .2s ease;pointer-events:none}
 @keyframes nodePulse{0%{transform:translate(-50%, -50%) scale(1);box-shadow:0 0 0 rgba(113,183,255,0)}50%{transform:translate(-50%, -50%) scale(1.08);box-shadow:0 0 12px rgba(113,183,255,0.6)}100%{transform:translate(-50%, -50%) scale(1);box-shadow:0 0 0 rgba(113,183,255,0)}}
 .bst-node.pulse{animation:nodePulse 450ms ease-out}
 svg .level-line{stroke:#24365e;stroke-width:1;stroke-dasharray:4,4}

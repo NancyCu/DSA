@@ -721,19 +721,22 @@ if (window.ResizeObserver) {
           targetPos = posForNodeId(highlight.nodeId);
         }
         if (targetPos) {
+          // offset bubble so it doesn't cover the node
+          const dx = (highlight.dir === 'R' ? 16 : -16);
+          const dy = -18; // above the node
           // if first time showing, place at root position immediately then fade
           if (bstTravelEl.style.opacity !== '1' && idToPos.size > 0) {
             const rootId = (rootForStep && rootForStep.id) ? rootForStep.id : null;
             const rootPos = rootId ? posForNodeId(rootId) : targetPos;
             if (rootPos) {
-              bstTravelEl.style.left = `${rootPos.x}px`;
-              bstTravelEl.style.top = `${rootPos.y}px`;
+              bstTravelEl.style.left = `${rootPos.x + dx}px`;
+              bstTravelEl.style.top = `${rootPos.y + dy}px`;
             }
             requestAnimationFrame(() => { bstTravelEl.style.opacity = '1'; });
           }
           // animate toward target
-          bstTravelEl.style.left = `${targetPos.x}px`;
-          bstTravelEl.style.top = `${targetPos.y}px`;
+          bstTravelEl.style.left = `${targetPos.x + dx}px`;
+          bstTravelEl.style.top = `${targetPos.y + dy}px`;
         }
         // remove bubble when insertion completes
         if (highlight.op === 'insert-new') {
