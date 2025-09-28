@@ -6,6 +6,7 @@ import { quickSort } from './algorithms/quickSort.js';
 import { selectionSort } from './algorithms/selectionSort.js';
 import { linearSearch } from './algorithms/linearSearch.js';
 import { binarySearch } from './algorithms/binarySearch.js';
+import { createBST } from './algorithms/bst.js';
 
 const sortingAlgorithms = {
   insertionSort,
@@ -20,6 +21,9 @@ const searchingAlgorithms = {
   binarySearch
 };
 
+// Trees (BST)
+let bstSession = null; // holds {steps, state, api}
+
 const formatName = (key) =>
   key
     .replace(/([A-Z])/g, ' $1')
@@ -32,6 +36,12 @@ const loadBtn = document.getElementById('loadBtn');
 const arrayInput = document.getElementById('arrayInput');
 const searchTarget = document.getElementById('searchTarget');
 const searchTargetLabel = document.getElementById('searchTargetLabel');
+// BST controls
+const bstValue = document.getElementById('bstValue');
+const bstValueLabel = document.getElementById('bstValueLabel');
+const bstInsertBtn = document.getElementById('bstInsertBtn');
+const bstSearchBtn = document.getElementById('bstSearchBtn');
+const bstClearBtn = document.getElementById('bstClearBtn');
 
 const firstBtn = document.getElementById('firstBtn');
 const prevBtn = document.getElementById('prevBtn');
@@ -43,13 +53,14 @@ const stepCounter = document.getElementById('stepCounter');
 
 const visual = document.getElementById('visual');
 const searchVisual = document.getElementById('searchVisual');
+const treeVisual = document.getElementById('treeVisual');
 const codePane = document.querySelector('#codePane code');
 const complexityBody = document.getElementById('complexityBody');
 const notesBody = document.getElementById('notesBody');
 
 function populateAlgorithmSelect() {
   const currentType = algoType.value;
-  const algorithms = currentType === 'sorting' ? sortingAlgorithms : searchingAlgorithms;
+  const algorithms = currentType === 'sorting' ? sortingAlgorithms : (currentType === 'searching' ? searchingAlgorithms : {});
   
   algoSelect.innerHTML = '';
   Object.keys(algorithms).forEach((key, index) => {
@@ -64,10 +75,23 @@ function populateAlgorithmSelect() {
   
   // Show/hide search target input
   const isSearching = currentType === 'searching';
+  const isTrees = currentType === 'trees';
   searchTarget.style.display = isSearching ? 'inline' : 'none';
   searchTargetLabel.style.display = isSearching ? 'inline' : 'none';
-  visual.style.display = isSearching ? 'none' : 'block';
+  visual.style.display = isSearching || isTrees ? 'none' : 'block';
   searchVisual.style.display = isSearching ? 'block' : 'none';
+  treeVisual.style.display = isTrees ? 'block' : 'none';
+
+  // toggle BST controls
+  const bstControls = [bstValueLabel, bstValue, bstInsertBtn, bstSearchBtn, bstClearBtn];
+  bstControls.forEach(el => el.style.display = isTrees ? (el.tagName === 'INPUT' || el.tagName === 'LABEL' ? 'inline' : 'inline-block') : 'none');
+
+  if (isTrees) {
+    ensureBSTInitialized();
+    renderBSTStep();
+    renderComplexity({ complexity: { best: 'O(log n)', avg: 'O(log n)', worst: 'O(n)' }, space: 'O(h)' });
+    renderCode(bstSession?.pseudocode ?? [], []);
+  }
 }
 
 let steps = [];
@@ -232,6 +256,81 @@ function renderCode(pseudo, hlLines = []) {
   });
 }
 
+// --- BST layout helpers ---
+function computePositions(root, width, levelHeight) {
+  // Returns array of {id, key, x, y}
+  const res = [];
+  let x = 0;
+  function inorder(node, depth) {
+    if (!node) return;
+    inorder(node.left, depth + 1);
+    const xpos = (++x) * (width / (countNodes(root) + 1));
+    const ypos = (depth + 1) * levelHeight;
+    res.push({ id: node.id, key: node.key, x: xpos, y: ypos });
+    inorder(node.right, depth + 1);
+  }
+  inorder(root, 0);
+  return res;
+}
+
+function countNodes(node){
+  if (!node) return 0;
+  return 1 + countNodes(node.left) + countNodes(node.right);
+}
+
+function edgesFrom(root) {
+  const edges = [];
+  function dfs(node){
+    if (!node) return;
+    if (node.left) edges.push([node.id, node.left.id]);
+    if (node.right) edges.push([node.id, node.right.id]);
+    dfs(node.left); dfs(node.right);
+  }
+  dfs(root);
+  return edges;
+}
+
+function renderBSTStep() {
+  treeVisual.innerHTML = '';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  treeVisual.appendChild(svg);
+  const w = treeVisual.clientWidth || 700;
+  const h = treeVisual.clientHeight || 400;
+  const levelH = Math.max(70, h / 6);
+  const nodes = computePositions(bstSession.state.root, w, levelH);
+  const idToPos = new Map(nodes.map(n => [n.id, n]));
+
+  // draw edges
+  for (const [a,b] of edgesFrom(bstSession.state.root)) {
+    const pa = idToPos.get(a); const pb = idToPos.get(b);
+    if (!pa || !pb) continue;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', pa.x);
+    line.setAttribute('y1', pa.y);
+    line.setAttribute('x2', pb.x);
+    line.setAttribute('y2', pb.y);
+    line.setAttribute('stroke', '#3a5a9e');
+    line.setAttribute('stroke-width', '2');
+    svg.appendChild(line);
+  }
+
+  // draw nodes
+  const highlight = bstSession.steps[idx]?.highlight || {};
+  for (const n of nodes) {
+    const div = document.createElement('div');
+    div.className = 'bst-node';
+    if (highlight.nodeId === n.id && highlight.op?.includes('visit')) div.classList.add('current');
+    if (highlight.nodeId === n.id && highlight.op === 'insert-new') div.classList.add('new');
+    if (highlight.nodeId === n.id && highlight.op === 'search-result' && highlight.found) div.classList.add('found');
+    div.style.left = `${n.x}px`;
+    div.style.top = `${n.y}px`;
+    div.textContent = n.key;
+    treeVisual.appendChild(div);
+  }
+
+  stepCounter.textContent = `Step ${idx + 1}/${bstSession.steps.length}`;
+}
+
 function renderComplexity(meta) {
   const rows = [
     ['Best', meta?.complexity?.best ?? '—'],
@@ -262,24 +361,37 @@ function renderCurrentStep() {
 
 function buildSteps(algoKey, arr, target = null) {
   const currentType = algoType.value;
-  const algorithms = currentType === 'sorting' ? sortingAlgorithms : searchingAlgorithms;
-  const algo = algorithms[algoKey];
-  if (!algo) return;
-  
-  run = currentType === 'searching' ? algo(arr, target) : algo(arr);
-  steps = run.steps ?? [];
-  if (!steps.length) {
-    steps = [{ array: [...arr], hlLines: [] }];
+  if (currentType === 'trees') {
+    // trees render path uses bstSession
+    if (!bstSession) ensureBSTInitialized(arr);
+    idx = Math.max(0, Math.min(idx, (bstSession.steps?.length || 1) - 1));
+    renderBSTStep();
+  } else {
+    const algorithms = currentType === 'sorting' ? sortingAlgorithms : searchingAlgorithms;
+    const algo = algorithms[algoKey];
+    if (!algo) return;
+    run = currentType === 'searching' ? algo(arr, target) : algo(arr);
+    steps = run.steps ?? [];
+    if (!steps.length) {
+      steps = [{ array: [...arr], hlLines: [] }];
+    }
+    idx = 0;
+    renderCurrentStep();
+    renderComplexity(run.meta ?? {});
   }
-  idx = 0;
-  renderCurrentStep();
-  renderComplexity(run.meta ?? {});
 }
 
 function setStep(i) {
-  if (!steps.length) return;
-  idx = Math.max(0, Math.min(i, steps.length - 1));
-  renderCurrentStep();
+  const currentType = algoType.value;
+  if (currentType === 'trees') {
+    if (!bstSession?.steps?.length) return;
+    idx = Math.max(0, Math.min(i, bstSession.steps.length - 1));
+    renderBSTStep();
+  } else {
+    if (!steps.length) return;
+    idx = Math.max(0, Math.min(i, steps.length - 1));
+    renderCurrentStep();
+  }
 }
 
 function stopPlaying() {
@@ -293,7 +405,9 @@ function stopPlaying() {
 
 function playLoop() {
   if (!playing) return;
-  if (idx < steps.length - 1) {
+  const currentType = algoType.value;
+  const total = currentType === 'trees' ? (bstSession?.steps?.length || 0) : steps.length;
+  if (idx < total - 1) {
     setStep(idx + 1);
     timer = setTimeout(playLoop, Number(speedRange.value));
   } else {
@@ -307,7 +421,13 @@ algoType.onchange = () => {
   const arr = parseArray(arrayInput.value);
   const target = parseInt(searchTarget.value);
   stopPlaying();
-  buildSteps(algoSelect.value, arr, target);
+  if (algoType.value === 'trees') {
+    ensureBSTInitialized();
+    idx = 0;
+    renderBSTStep();
+  } else {
+    buildSteps(algoSelect.value, arr, target);
+  }
 };
 
 algoSelect.onchange = () => {
@@ -342,6 +462,42 @@ searchTarget.onchange = () => {
   const target = parseInt(searchTarget.value);
   stopPlaying();
   buildSteps(algoSelect.value, arr, target);
+};
+
+// BST handlers
+function ensureBSTInitialized(initialArr) {
+  if (!bstSession) {
+    const init = Array.isArray(initialArr) && initialArr.length ? initialArr : parseArray(arrayInput.value);
+    const unique = [...new Set(init)];
+    bstSession = createBST(unique);
+    // set session data
+    bstSession.pseudocode = bstSession.steps?.length ? bstSession.pseudocode : bstSession.pseudocode;
+    idx = Math.max(0, bstSession.steps.length - 1);
+  }
+}
+
+bstInsertBtn.onclick = () => {
+  ensureBSTInitialized();
+  const v = Number(bstValue.value);
+  if (!Number.isFinite(v)) return;
+  const before = bstSession.steps.length;
+  bstSession.api.insert(v);
+  idx = before; // jump to first new step
+  renderBSTStep();
+};
+
+bstSearchBtn.onclick = () => {
+  ensureBSTInitialized();
+  const v = Number(bstValue.value);
+  if (!Number.isFinite(v)) return;
+  const before = bstSession.steps.length;
+  bstSession.api.search(v);
+  idx = before;
+  renderBSTStep();
+};
+
+bstClearBtn.onclick = () => {
+  bstSession = null; idx = 0; renderBSTStep();
 };
 
 firstBtn.onclick = () => {

@@ -14,20 +14,29 @@
       <select id="algoType" aria-label="Algorithm Type">
         <option value="sorting">Sorting</option>
         <option value="searching">Searching</option>
+        <option value="trees">Trees (BST)</option>
       </select>
       <select id="algoSelect" aria-label="Algorithm"></select>
       <button id="randomBtn" title="Randomize input">🎲 Random</button>
       <input id="arrayInput" value="5,2,9,1,5,6" aria-label="Array input (comma-separated)" />
-      <button id="loadBtn">Load</button>
+  <button id="loadBtn">Load</button>
       <label for="searchTarget" id="searchTargetLabel" style="display: none;">Target:</label>
       <input id="searchTarget" type="number" value="5" style="display: none;" aria-label="Search target" />
+
+  <!-- BST controls (shown in Trees mode) -->
+  <label for="bstValue" id="bstValueLabel" style="display:none;">Value:</label>
+  <input id="bstValue" type="number" value="8" style="display:none;" aria-label="BST value" />
+  <button id="bstInsertBtn" style="display:none;">Insert</button>
+  <button id="bstSearchBtn" style="display:none;">Search</button>
+  <button id="bstClearBtn" style="display:none;">Clear</button>
     </nav>
   </header>
 
   <main class="grid">
     <section class="panel" id="vizPanel" aria-label="Visualization">
-      <div id="visual"></div>
+  <div id="visual"></div>
       <div id="searchVisual" style="display: none;"></div>
+  <div id="treeVisual" style="display:none;"></div>
       <div class="controls">
         <button id="firstBtn">⏮ First</button>
         <button id="prevBtn">◀ Prev</button>
