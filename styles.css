@@ -45,6 +45,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .mini-toolbar button{background:#162541;border:1px solid #24365e;color:#e7eefc;padding:6px 10px;border-radius:999px;cursor:pointer;pointer-events:auto}
 #visual, #searchVisual{height:320px;display:flex;align-items:flex-end;gap:6px;padding:12px;border:1px dashed #24365e;border-radius:10px;overflow-x:auto}
 #treeVisual{height:min(56vh, 520px);min-height:320px;position:relative;border:1px dashed #24365e;border-radius:10px;padding:12px;background:rgba(0,0,0,0.1);overflow:auto}
+#treeVisual.fit{overflow:visible;touch-action:pan-y}
 #treeVisual svg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #treeVisual .bst-nodes-layer{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2}
 /* When we scale the tree, center and smooth */
@@ -97,6 +98,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 
 .controls{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
 .controls .speed{color:var(--muted);font-size:14px}
+.controls #bstResetBtn{background:#162541;border:1px solid #24365e;color:#e7eefc;padding:6px 10px;border-radius:8px;cursor:pointer}
 .code .panel-title, .panel-title{font-weight:600;margin-bottom:8px;color:var(--accent)}
 #codePane{background:#0b1324;border:1px solid #24365e;border-radius:8px;padding:10px;max-height:340px;overflow:auto}
 #codePane code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:13px;white-space:pre}

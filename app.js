@@ -83,6 +83,7 @@ const miniPlay = document.getElementById('miniPlay');
 const hapticsToggle = document.getElementById('hapticsToggle');
 const bstFitToggle = document.getElementById('bstFitToggle');
 const bstFitWrap = document.getElementById('bstFitWrap');
+const bstResetBtn = document.getElementById('bstResetBtn');
 
 // ---- Persistence for analysis controls ----
 const LS_KEYS = {
@@ -194,6 +195,7 @@ function populateAlgorithmSelect() {
   searchVisual.style.display = isSearching ? 'block' : 'none';
   treeVisual.style.display = isTrees ? 'block' : 'none';
   if (bstFitWrap) bstFitWrap.style.display = isTrees ? 'inline-flex' : 'none';
+  if (bstResetBtn) bstResetBtn.style.display = isTrees ? 'inline-block' : 'none';
 
   // toggle BST controls
   const bstField = document.getElementById('bstField');
@@ -449,6 +451,7 @@ function edgesFrom(root) {
 
 function renderBSTStep() {
   treeVisual.innerHTML = '';
+  treeVisual.classList.toggle('fit', !!bstFitToggle?.checked);
   // Wrap layers to allow scaling
   const zoomWrap = document.createElement('div');
   zoomWrap.className = 'zoom-wrap';
@@ -485,9 +488,11 @@ function renderBSTStep() {
     const by = minY - margin;
     const bw = Math.max(1, (maxX - minX) + margin * 2);
     const bh = Math.max(1, (maxY - minY) + margin * 2);
-    const scaleBase = Math.min(w / bw, h / bh);
-    // Allow modest upscaling to fill the area better on mobile
-    const scale = Math.max(0.35, Math.min(scaleBase, 1.4));
+  const scaleBase = Math.min(w / bw, h / bh);
+  // Clamp scaling: smaller upscaling on mobile, larger on desktop
+  const maxScale = isNarrow ? 1.05 : 1.8;
+  const minScale = isNarrow ? 0.35 : 0.45;
+  const scale = Math.max(minScale, Math.min(scaleBase, maxScale));
     // Center content after scaling
     const cx = (w - bw * scale) / 2 - bx * scale;
     const cy = (h - bh * scale) / 2 - by * scale;
@@ -555,6 +560,10 @@ function renderBSTStep() {
       bstNodeEls.delete(id);
     }
   }
+  // Depth-aware node sizing (smaller nodes for deeper trees)
+  const baseNode = isNarrow ? 30 : 36;
+  const minNode = isNarrow ? 24 : 28;
+  const nodeSize = Math.max(minNode, Math.min(baseNode, Math.round(baseNode - Math.max(0, d - 3) * 2)));
   for (const n of nodes) {
     let div = bstNodeEls.get(n.id);
     if (!div) {
@@ -574,6 +583,11 @@ function renderBSTStep() {
     // update position (animates via CSS transition)
     div.style.left = `${n.x}px`;
     div.style.top = `${n.y}px`;
+    // update size and classes
+    div.style.width = `${nodeSize}px`;
+    div.style.height = `${nodeSize}px`;
+    div.style.lineHeight = `${nodeSize}px`;
+    div.style.fontSize = `${nodeSize <= 26 ? 12 : 14}px`;
     // update classes
     div.classList.toggle('current', highlight.nodeId === n.id && (highlight.op?.includes('visit') || highlight.op === 'insert-visit' || highlight.op === 'search-visit'));
     div.classList.toggle('new', highlight.nodeId === n.id && highlight.op === 'insert-new');
@@ -931,6 +945,16 @@ if (bstFitToggle) {
   bstFitToggle.onchange = () => {
     try { localStorage.setItem(LS_KEYS.bstFit, bstFitToggle.checked ? '1' : '0'); } catch {}
     try { localStorage.setItem(LS_KEYS.bstFitUserSet, '1'); } catch {}
+    if (algoType.value === 'trees') renderBSTStep();
+  };
+}
+if (bstResetBtn) {
+  bstResetBtn.onclick = () => {
+    try {
+      localStorage.setItem(LS_KEYS.bstFit, '1');
+      localStorage.setItem(LS_KEYS.bstFitUserSet, '0');
+    } catch {}
+    if (bstFitToggle) bstFitToggle.checked = true;
     if (algoType.value === 'trees') renderBSTStep();
   };
 }
