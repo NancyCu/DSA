@@ -697,7 +697,10 @@ function renderBSTStep() {
     }
   }
   // Hide Big O banner in Trees mode (informational table only)
-  if (analysisSummary) analysisSummary.style.display = 'none';
+  if (analysisSummary) {
+    analysisSummary.classList.remove('is-visible');
+    analysisSummary.style.display = 'none';
+  }
 }
 
 function renderComplexity(meta) {
@@ -776,12 +779,15 @@ function updateAnalysisSummaryAtEnd() {
   const currentType = algoType.value;
   // Trees: hide banner; table is informative only
   if (currentType === 'trees') {
+    analysisSummary.classList.remove('is-visible');
     analysisSummary.style.display = 'none';
     return;
   }
   const total = steps?.length || 0;
   const atEnd = total > 0 && idx >= total - 1;
   if (!atEnd) {
+    analysisSummary.classList.remove('is-visible');
+    // keep display none to remove from flow
     analysisSummary.style.display = 'none';
     return;
   }
@@ -790,8 +796,12 @@ function updateAnalysisSummaryAtEnd() {
   const bigO = bigOFor(currentType, algoKey, { mode });
   if (bigO) {
     analysisBigO.textContent = bigO.startsWith('O(') ? bigO : `O(${bigO})`;
+    // make sure it's in the flow, then animate in
     analysisSummary.style.display = 'flex';
+    // next frame to ensure transition triggers
+    requestAnimationFrame(() => analysisSummary.classList.add('is-visible'));
   } else {
+    analysisSummary.classList.remove('is-visible');
     analysisSummary.style.display = 'none';
   }
 }
