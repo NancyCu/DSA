@@ -597,21 +597,14 @@ function analysisBinarySearch(steps, currentIdx) {
   for (let i = 0; i <= currentIdx && i < steps.length; i++) {
     const s = steps[i];
     if (s && Array.isArray(s.array)) {
-      const left = s.left ?? '-';
-      const right = s.right ?? '-';
-      const mid = s.mid ?? '-';
+      const left = s.left ?? NaN;
+      const right = s.right ?? NaN;
+      const mid = s.mid ?? NaN;
       const range = (Number.isFinite(left) && Number.isFinite(right)) ? (right - left + 1) : '-';
-      let decision = '';
-      if (Number.isFinite(mid) && Number.isFinite(left) && Number.isFinite(right)) {
-        const mv = s.array[mid];
-        if (s.found && mid >= 0) decision = `arr[${mid}]=${mv} == target`;
-        else if (mv > s.target) decision = `arr[${mid}]=${mv} > ${s.target} ⇒ left`;
-        else if (mv < s.target) decision = `arr[${mid}]=${mv} < ${s.target} ⇒ right`;
-      }
-      rows.push({ level: i, arg: `|range|=${range}`, tc1: `check mid`, nodes: `mid=${mid}`, levelTC: decision });
+      rows.push({ level: i, arg: `|range|=${range}`, tc1: 'c', nodes: 1, levelTC: 'c' });
     }
   }
-  const total = `≈ O(log₂n) steps`;
+  const total = `${rows.length}·c ≈ O(log₂n)`;
   return { rows, total };
 }
 
@@ -621,26 +614,18 @@ function analysisLinearSearch(steps, currentIdx) {
   for (let i = 0; i <= currentIdx && i < steps.length; i++) {
     const s = steps[i];
     if (s && Array.isArray(s.nodes)) {
-      const idx = s.currentNode ?? '-';
-      const val = (Number.isFinite(idx) && s.nodes[idx]) ? s.nodes[idx].value : '-';
-      const action = s.found && Number.isFinite(idx) ? `found ${val}` : (Number.isFinite(idx) ? `compare ${val}` : '');
-      rows.push({ level: i, arg: `i=${idx}`, tc1: 'compare', nodes: '-', levelTC: action });
+      const idx = s.currentNode ?? NaN;
+      rows.push({ level: i, arg: Number.isFinite(idx) ? `i=${idx}` : '—', tc1: 'c', nodes: 1, levelTC: 'c' });
     }
   }
-  const total = rows.length ? `${rows.length} comparisons` : '';
+  const total = rows.length ? `${rows.length}·c` : '';
   return { rows, total };
 }
 
 function analysisSimpleSort(step, n) {
   if (!step) return { rows: [] };
-  const sel = step.sel || [];
-  const cmp = step.compare || [];
-  const swp = step.swap || [];
-  const action = swp.length ? `swap ${swp.join(',')}` : (cmp.length ? `compare ${cmp.join(',')}` : (sel.length ? `select ${sel.join(',')}` : ''));
-  const rows = [
-    { level: idx + 1, arg: `n=${n}`, tc1: '—', nodes: (cmp.length ? cmp.join(',') : '—'), levelTC: action }
-  ];
-  return { rows, total: action };
+  const rows = [ { level: idx + 1, arg: `n=${n}`, tc1: 'c', nodes: 1, levelTC: 'c' } ];
+  return { rows, total: `${idx + 1}·c` };
 }
 
 function renderCurrentStep() {
@@ -874,66 +859,4 @@ if (window.ResizeObserver) {
       renderBSTStep();
     }
   });
-
-    // Traveling bubble logic for insert
-    if (highlight && (highlight.op === 'insert-visit' || highlight.op === 'cmp' || highlight.op === 'ret' || highlight.op === 'insert-new')) {
-      // The key being inserted is in highlight.key during insert steps
-      const key = highlight.key;
-      if (key != null) {
-        const posForNodeId = (id) => idToPos.get(id) || null;
-        // Ensure element exists
-        if (!bstTravelEl) {
-          bstTravelEl = document.createElement('div');
-          bstTravelEl.className = 'bst-travel';
-          bstTravelEl.style.opacity = '0';
-          treeVisual.appendChild(bstTravelEl);
-        }
-        // set key text if changed
-        if (bstTravelKey !== key) {
-          bstTravelEl.textContent = key;
-          bstTravelKey = key;
-        }
-        // compute target position: current visited node (for visit/cmp), or final new node position (insert-new)
-        let targetPos = null;
-        if (highlight.op === 'insert-new' && highlight.nodeId) {
-          targetPos = posForNodeId(highlight.nodeId);
-        } else if (highlight.nodeId) {
-          targetPos = posForNodeId(highlight.nodeId);
-        }
-        if (targetPos) {
-          // offset bubble so it doesn't cover the node
-          const dx = (highlight.dir === 'R' ? 16 : -16);
-          const dy = -18; // above the node
-          // if first time showing, place at root position immediately then fade
-          if (bstTravelEl.style.opacity !== '1' && idToPos.size > 0) {
-            const rootId = (rootForStep && rootForStep.id) ? rootForStep.id : null;
-            const rootPos = rootId ? posForNodeId(rootId) : targetPos;
-            if (rootPos) {
-              bstTravelEl.style.left = `${rootPos.x + dx}px`;
-              bstTravelEl.style.top = `${rootPos.y + dy}px`;
-            }
-            requestAnimationFrame(() => { bstTravelEl.style.opacity = '1'; });
-          }
-          // animate toward target
-          bstTravelEl.style.left = `${targetPos.x + dx}px`;
-          bstTravelEl.style.top = `${targetPos.y + dy}px`;
-        }
-        // remove bubble when insertion completes
-        if (highlight.op === 'insert-new') {
-          // fade out after short delay so users see arrival
-          setTimeout(() => {
-            if (bstTravelEl) {
-              bstTravelEl.style.opacity = '0';
-              setTimeout(() => { bstTravelEl?.remove(); bstTravelEl = null; bstTravelKey = null; }, 250);
-            }
-          }, 250);
-        }
-      }
-    } else {
-      // On non-insert steps, hide bubble if present
-      if (bstTravelEl) {
-        bstTravelEl.style.opacity = '0';
-        setTimeout(() => { bstTravelEl?.remove(); bstTravelEl = null; bstTravelKey = null; }, 250);
-      }
-    }
 }
