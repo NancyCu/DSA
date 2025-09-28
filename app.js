@@ -73,6 +73,7 @@ let analysisLastHL = null;
 const inputsToggle = document.getElementById('inputsToggle');
 const inputsPanel = document.querySelector('.inputs-panel');
 const inputsBody = document.getElementById('inputsBody');
+const inputsHint = document.getElementById('inputsHint');
 const sortedToggle = document.getElementById('sortedToggle');
 const arraySizeInput = document.getElementById('arraySize');
 const resetBtn = document.getElementById('resetBtn');
@@ -116,11 +117,13 @@ try {
   inputsToggle.textContent = '›';
       if (miniToolbar) miniToolbar.style.display = 'flex';
       if (inputsPanel) inputsPanel.classList.add('is-collapsed');
+      if (inputsHint) inputsHint.style.visibility = 'visible';
     } else {
   inputsToggle.setAttribute('aria-expanded','true');
   inputsToggle.textContent = '⌄';
       if (miniToolbar) miniToolbar.style.display = 'none';
       if (inputsPanel) inputsPanel.classList.remove('is-collapsed');
+      if (inputsHint) inputsHint.style.visibility = 'hidden';
     }
   }
   const sortedPref = localStorage.getItem(LS_KEYS.sortedAfterRandom);
@@ -156,6 +159,7 @@ try {
   inputsToggle.textContent = '›';
       if (miniToolbar) miniToolbar.style.display = 'flex';
       if (inputsPanel) inputsPanel.classList.add('is-collapsed');
+      if (inputsHint) inputsHint.style.visibility = 'visible';
     }
   }
 } catch {}
@@ -917,6 +921,7 @@ if (inputsToggle && inputsBody) {
     try { localStorage.setItem(LS_KEYS.inputsCollapsed, willCollapse ? '1' : '0'); } catch {}
     if (miniToolbar) miniToolbar.style.display = willCollapse ? 'flex' : 'none';
   if (inputsPanel) inputsPanel.classList.toggle('is-collapsed', willCollapse);
+  if (inputsHint) inputsHint.style.visibility = willCollapse ? 'visible' : 'hidden';
     // Auto-focus primary input when expanding on mobile
     if (!willCollapse) {
       setTimeout(() => {
