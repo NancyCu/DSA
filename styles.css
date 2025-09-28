@@ -70,6 +70,8 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 .panel-sub{margin-top:10px}
 .analysis-controls{display:flex;gap:8px;align-items:center;margin:6px 0}
 .analysis-controls select{background:#0c1426;border:1px solid #223152;color:var(--ink);padding:4px 6px;border-radius:6px}
+.analysis-controls input[type="number"]{background:#0c1426;border:1px solid #223152;color:var(--ink);padding:4px 6px;border-radius:6px}
+.analysis-controls label{color:#cfe1ff}
 .analysis{width:100%;border-collapse:collapse;background:#0b1324;border:1px solid #24365e;border-radius:8px;overflow:hidden}
 .analysis th,.analysis td{border-bottom:1px solid #1f2a44;padding:6px 8px;font-size:13px;color:#cfe1ff}
 .analysis thead th{background:#101a33;color:#9fb0d1;text-align:left}

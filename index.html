@@ -57,11 +57,18 @@
       <div class="panel-sub">
         <div class="panel-title">Recursion Analysis</div>
         <div class="analysis-controls" id="analysisControls" style="display:none;">
-          <label for="analysisMode">Mode:</label>
-          <select id="analysisMode">
-            <option value="avg">Average</option>
-            <option value="worst">Worst</option>
-          </select>
+          <span id="analysisModeWrap">
+            <label for="analysisMode">Mode:</label>
+            <select id="analysisMode">
+              <option value="avg">Average</option>
+              <option value="worst">Worst</option>
+            </select>
+          </span>
+          <label for="analysisNumeric">
+            <input type="checkbox" id="analysisNumeric" /> Numeric
+          </label>
+          <label for="analysisC">c =</label>
+          <input id="analysisC" type="number" value="8" min="1" step="1" style="width:64px" />
         </div>
         <table class="analysis">
           <thead>

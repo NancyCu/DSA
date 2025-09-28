@@ -64,6 +64,9 @@ const analysisBody = document.getElementById('analysisBody');
 const analysisFoot = document.getElementById('analysisFoot');
 const analysisControls = document.getElementById('analysisControls');
 const analysisModeSel = document.getElementById('analysisMode');
+const analysisModeWrap = document.getElementById('analysisModeWrap');
+const analysisNumeric = document.getElementById('analysisNumeric');
+const analysisC = document.getElementById('analysisC');
 
 function populateAlgorithmSelect() {
   const currentType = algoType.value;
@@ -574,20 +577,46 @@ function analysisDivideAndConquer(n, algoKey, options = {}) {
   let level = 0;
   let size = n;
   // Determine variant: +c (per node constant) vs +cn (per node linear)
-  const plusCN = (algoKey === 'mergeSort') || (algoKey === 'quickSort' && options.mode === 'avg');
+  const k = Math.ceil(Math.log2(n));
+  const isQS = algoKey === 'quickSort';
+  const isWorstQS = isQS && options.mode === 'worst';
+  const plusCN = (algoKey === 'mergeSort') || (isQS && options.mode === 'avg');
+  const numeric = !!options.numeric;
+  const cval = Number(options.c) || 1;
+
+  if (isWorstQS) {
+    // Worst-case Quick Sort: T(n) = T(n-1) + cn; 1 node per level, tc1 = c·(n - level)
+    const maxRows = n > 16 ? 6 : n; // clip for readability
+    for (let l = 0; l < Math.min(n, maxRows); l++) {
+      const m = n - l;
+      const tc1 = numeric ? `${cval*m}` : `c·${m}`;
+      const levelTC = tc1;
+      rows.push({ level: l, arg: `${m}`, tc1, nodes: 1, levelTC });
+    }
+    if (n > maxRows) rows.push({ level: '…', arg: '…', tc1: '…', nodes: '…', levelTC: '…' });
+    const total = numeric ? `${cval}·${n}(${n}+1)/2 = ${cval * n * (n+1) / 2}` : `= c·n(n+1)/2 ≈ (c/2)·${n}²`;
+    const showControls = true;
+    return { rows, total, showControls };
+  }
+
   while (size > 1) {
     const arg = level === 0 ? 'n' : `n/2^${level}`;
     const nodes = `2^${level}`;
-    const tc1 = plusCN ? `c·${arg}` : `c`;
-    const levelTC = plusCN ? `c·n` : `c·2^${level}`;
+    const tc1 = plusCN ? (numeric ? `${cval}·${(n/Math.pow(2,level)).toFixed(0)}` : `c·${arg}`) : (numeric ? `${cval}` : `c`);
+    const levelTC = plusCN ? (numeric ? `${cval*n}` : `c·n`) : (numeric ? `${cval*Math.pow(2,level)}` : `c·2^${level}`);
     rows.push({ level, arg, tc1, nodes, levelTC });
     level++;
     size = Math.ceil(size / 2);
   }
   // base level (size ~ 1)
-  rows.push({ level, arg: '1', tc1: 'c', nodes: `2^${level}`, levelTC: `c·2^${level}` });
-  const total = plusCN ? `≈ c·n·log₂n + c·2^k` : `≈ c·(2^{k+1} - 1)`;
-  const showControls = (algoKey === 'quickSort');
+  rows.push({ level, arg: '1', tc1: numeric ? `${cval}` : 'c', nodes: `2^${level}`, levelTC: numeric ? `${cval*Math.pow(2,level)}` : `c·2^${level}` });
+  let total;
+  if (plusCN) {
+    total = numeric ? `${cval}·${n}·log₂${n} + ${cval}·2^${k}` : `≈ c·${n}·log₂${n} + c·2^${k}`;
+  } else {
+    total = numeric ? `${cval}·(2^{${k}+1} - 1)` : `≈ c·(2^{${k}+1} - 1)`;
+  }
+  const showControls = isQS;
   return { rows, total, showControls };
 }
 
@@ -637,8 +666,15 @@ function renderCurrentStep() {
     const n = steps?.[0]?.array?.length || parseArray(arrayInput.value).length || 0;
     if (n && (algoKey === 'mergeSort' || algoKey === 'quickSort')) {
       const mode = (algoKey === 'quickSort') ? (analysisModeSel?.value || 'avg') : undefined;
-      renderAnalysis(analysisDivideAndConquer(n, algoKey, { mode }));
+      const numeric = !!analysisNumeric?.checked;
+      const c = Number(analysisC?.value) || 1;
+      const model = analysisDivideAndConquer(n, algoKey, { mode, numeric, c });
+      if (analysisControls) analysisControls.style.display = 'flex';
+      if (analysisModeWrap) analysisModeWrap.style.display = (algoKey === 'quickSort') ? 'inline-flex' : 'none';
+      renderAnalysis(model);
     } else {
+      if (analysisControls) analysisControls.style.display = 'flex';
+      if (analysisModeWrap) analysisModeWrap.style.display = 'none';
       renderAnalysis(analysisSimpleSort(steps[idx], n));
     }
   } else {
@@ -660,6 +696,12 @@ if (analysisModeSel) {
     // trigger re-render to update analysis
     renderCurrentStep();
   };
+}
+if (analysisNumeric) {
+  analysisNumeric.onchange = () => renderCurrentStep();
+}
+if (analysisC) {
+  analysisC.onchange = () => renderCurrentStep();
 }
 
 function buildSteps(algoKey, arr, target = null) {
