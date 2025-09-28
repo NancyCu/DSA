@@ -1,10 +1,16 @@
 // Minimal VisuAlgo-like starter (vanilla JS, no build step)
 import { insertionSort } from './algorithms/insertionSort.js';
 import { bubbleSort } from './algorithms/bubbleSort.js';
+import { mergeSort } from './algorithms/mergeSort.js';
+import { quickSort } from './algorithms/quickSort.js';
+import { selectionSort } from './algorithms/selectionSort.js';
 
 const algorithms = {
   insertionSort,
-  bubbleSort
+  bubbleSort,
+  mergeSort,
+  quickSort,
+  selectionSort
 };
 
 const formatName = (key) =>
