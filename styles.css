@@ -45,7 +45,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .inputs-panel.is-collapsed .mini-toolbar{top:auto;bottom:-18px;left:16px;right:auto}
 .mini-toolbar button{background:#162541;border:1px solid #24365e;color:#e7eefc;padding:6px 10px;border-radius:999px;cursor:pointer;pointer-events:auto}
 #visual, #searchVisual{height:320px;display:flex;align-items:flex-end;gap:6px;padding:12px;border:1px dashed #24365e;border-radius:10px;overflow-x:auto}
-#treeVisual{height:min(56vh, 520px);min-height:320px;position:relative;border:1px dashed #24365e;border-radius:10px;padding:12px;background:rgba(0,0,0,0.1);overflow:auto}
+#treeVisual{height:min(48vh, 520px);min-height:280px;position:relative;border:1px dashed #24365e;border-radius:10px;padding:12px;background:rgba(0,0,0,0.1);overflow:auto}
 #treeVisual.fit{overflow:visible;touch-action:pan-y}
 #treeVisual svg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1}
 #treeVisual .bst-nodes-layer{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2}
@@ -129,8 +129,8 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.grid{grid-template-columns:1fr}
 	.inputs-panel .inputs-row{grid-template-columns:1fr}
 	.inputs-panel .field.grow{grid-column:auto}
-	#visual, #searchVisual{height:220px}
-	#treeVisual{height:64vh;min-height:320px}
+	#visual, #searchVisual{height:200px}
+	#treeVisual{height:46vh;min-height:240px}
 	.topbar h1{font-size:18px}
 	.controls{position:sticky;bottom:0;background:rgba(15,22,39,0.9);backdrop-filter:saturate(1.2) blur(6px);padding:8px;border-radius:10px;margin-top:12px}
 	.controls button{padding:10px 12px}
@@ -141,7 +141,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 @media (max-width: 640px){
 	.inputs-panel input,.inputs-panel select{padding:12px;font-size:16px}
 	.inputs-panel button{padding:12px 14px}
-	#treeVisual{height:68vh;min-height:300px}
+	#treeVisual{height:42vh;min-height:220px}
 	.bst-node{min-width:28px;min-height:28px;font-size:12px}
 	svg .edge-label{font-size:9px}
 	.bar{width:24px;margin-right:4px}
