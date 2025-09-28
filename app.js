@@ -60,6 +60,7 @@ const treeVisual = document.getElementById('treeVisual');
 const codePane = document.querySelector('#codePane code');
 const complexityBody = document.getElementById('complexityBody');
 const notesBody = document.getElementById('notesBody');
+const analysisBody = document.getElementById('analysisBody');
 
 function populateAlgorithmSelect() {
   const currentType = algoType.value;
@@ -467,6 +468,67 @@ function renderBSTStep() {
   }
   // Update pseudocode highlighting for the current BST step
   renderCode(bstSession?.pseudocode ?? [], step?.hlLines ?? []);
+  // Update analysis table for BST levels (informative, not exact TC)
+  if (rootForStep) {
+    const byLevelCounts = [];
+    const q = [[rootForStep, 0]];
+    while (q.length) {
+      const [node, lv] = q.shift();
+      byLevelCounts[lv] = (byLevelCounts[lv] || 0) + 1;
+      if (node.left) q.push([node.left, lv + 1]);
+      if (node.right) q.push([node.right, lv + 1]);
+    }
+    const rows = byLevelCounts.map((cnt, lv) => ({ level: lv, arg: '—', tc1: 'visit', nodes: cnt, levelTC: `${cnt}·visit` }));
+    renderAnalysis({ rows });
+  } else {
+    renderAnalysis(null);
+  }
+
+  // Traveling bubble logic for insert
+  if (highlight && (highlight.op === 'insert-visit' || highlight.op === 'cmp' || highlight.op === 'ret' || highlight.op === 'insert-new')) {
+    const key = highlight.key;
+    if (key != null) {
+      const posForNodeId = (id) => idToPos.get(id) || null;
+      if (!bstTravelEl) {
+        bstTravelEl = document.createElement('div');
+        bstTravelEl.className = 'bst-travel';
+        bstTravelEl.style.opacity = '0';
+        treeVisual.appendChild(bstTravelEl);
+      }
+      if (bstTravelKey !== key) { bstTravelEl.textContent = key; bstTravelKey = key; }
+      let targetPos = null;
+      if (highlight.op === 'insert-new' && highlight.nodeId) targetPos = posForNodeId(highlight.nodeId);
+      else if (highlight.nodeId) targetPos = posForNodeId(highlight.nodeId);
+      if (targetPos) {
+        const dx = (highlight.dir === 'R' ? 16 : -16);
+        const dy = -18;
+        if (bstTravelEl.style.opacity !== '1' && idToPos.size > 0) {
+          const rootId = (rootForStep && rootForStep.id) ? rootForStep.id : null;
+          const rootPos = rootId ? posForNodeId(rootId) : targetPos;
+          if (rootPos) {
+            bstTravelEl.style.left = `${rootPos.x + dx}px`;
+            bstTravelEl.style.top = `${rootPos.y + dy}px`;
+          }
+          requestAnimationFrame(() => { bstTravelEl.style.opacity = '1'; });
+        }
+        bstTravelEl.style.left = `${targetPos.x + dx}px`;
+        bstTravelEl.style.top = `${targetPos.y + dy}px`;
+      }
+      if (highlight.op === 'insert-new') {
+        setTimeout(() => {
+          if (bstTravelEl) {
+            bstTravelEl.style.opacity = '0';
+            setTimeout(() => { bstTravelEl?.remove(); bstTravelEl = null; bstTravelKey = null; }, 250);
+          }
+        }, 250);
+      }
+    }
+  } else {
+    if (bstTravelEl) {
+      bstTravelEl.style.opacity = '0';
+      setTimeout(() => { bstTravelEl?.remove(); bstTravelEl = null; bstTravelKey = null; }, 250);
+    }
+  }
 }
 
 function renderComplexity(meta) {
@@ -482,10 +544,45 @@ function renderComplexity(meta) {
   notesBody.innerHTML = meta?.notes ?? '';
 }
 
+function renderAnalysis(model) {
+  if (!analysisBody) return;
+  if (!model || !Array.isArray(model.rows) || model.rows.length === 0) {
+    analysisBody.innerHTML = '';
+    return;
+  }
+  analysisBody.innerHTML = model.rows
+    .map((r) => `<tr><td>${r.level}</td><td>${r.arg}</td><td>${r.tc1}</td><td>${r.nodes}</td><td>${r.levelTC}</td></tr>`) 
+    .join('');
+}
+
 function renderCurrentStep() {
   const currentType = algoType.value;
   if (currentType === 'sorting') {
     renderBars(steps[idx]);
+    // Populate recursion analysis for divide-and-conquer sorts
+    const algoKey = algoSelect.value;
+    const n = steps?.[0]?.array?.length || parseArray(arrayInput.value).length || 0;
+    if (n && (algoKey === 'mergeSort' || algoKey === 'quickSort')) {
+      const rows = [];
+      let level = 0;
+      let size = n;
+      while (size >= 1) {
+        const nodes = Math.pow(2, level) > n ? n : Math.pow(2, level);
+        const arg = level === 0 ? `n` : `n/2^${level}`;
+        const tc1 = algoKey === 'mergeSort' ? `c·${level === 0 ? 'n' : `n/2^${level}`}` : `~c·${level === 0 ? 'n' : `n/2^${level}`}`;
+        const levelTC = algoKey === 'mergeSort' ? `≈ c·n` : `≈ c·n`;
+        rows.push({ level, arg, tc1, nodes, levelTC });
+        level++;
+        size = Math.floor(size / 2);
+        if (size <= 1) {
+          rows.push({ level, arg: '1', tc1: 'c', nodes: Math.pow(2, level), levelTC: `≈ c·2^${level}` });
+          break;
+        }
+      }
+      renderAnalysis({ rows });
+    } else {
+      renderAnalysis(null);
+    }
   } else {
     const algoKey = algoSelect.value;
     if (algoKey === 'linearSearch') {
@@ -493,6 +590,7 @@ function renderCurrentStep() {
     } else if (algoKey === 'binarySearch') {
       renderBinarySearchArray(steps[idx]);
     }
+    renderAnalysis(null);
   }
   renderCode(run?.pseudocode ?? [], steps[idx]?.hlLines ?? []);
 }
