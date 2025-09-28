@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VisuDSA — starter</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>VisuDSA <span class="badge">starter</span></h1>
+    <nav>
+      <select id="algoSelect" aria-label="Algorithm">
+        <option value="insertionSort">Insertion Sort</option>
+      </select>
+      <button id="randomBtn" title="Randomize input">🎲 Random</button>
+      <input id="arrayInput" value="5,2,9,1,5,6" aria-label="Array input (comma-separated)" />
+      <button id="loadBtn">Load</button>
+    </nav>
+  </header>
+
+  <main class="grid">
+    <section class="panel" id="vizPanel" aria-label="Visualization">
+      <div id="visual"></div>
+      <div class="controls">
+        <button id="firstBtn">⏮ First</button>
+        <button id="prevBtn">◀ Prev</button>
+        <button id="playBtn">▶ Play</button>
+        <button id="nextBtn">Next ▶</button>
+        <button id="lastBtn">Last ⏭</button>
+        <label class="speed">
+          Speed:
+          <input id="speedRange" type="range" min="100" max="1500" step="50" value="600">
+        </label>
+        <span id="stepCounter" class="muted">Step 0/0</span>
+      </div>
+    </section>
+
+    <section class="panel code" aria-label="Code">
+      <div class="panel-title">Pseudocode</div>
+      <pre id="codePane"><code></code></pre>
+    </section>
+
+    <section class="panel" aria-label="Complexity">
+      <div class="panel-title">Complexity</div>
+      <table class="complexity">
+        <tbody id="complexityBody">
+          <!-- Filled at runtime -->
+        </tbody>
+      </table>
+      <details class="notes">
+        <summary>Notes</summary>
+        <div id="notesBody"></div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Built with vanilla JS. No frameworks. Edit <code>algorithms/*.js</code> to add more.
+    <a href="https://visualgo.net/en" target="_blank" rel="noopener">Inspired by VisuAlgo</a>.
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
