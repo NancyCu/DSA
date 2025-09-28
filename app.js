@@ -555,6 +555,76 @@ function renderAnalysis(model) {
     .join('');
 }
 
+// --- Analysis builders ---
+function analysisDivideAndConquer(n, algoKey) {
+  if (!n || n <= 0) return { rows: [] };
+  const rows = [];
+  let level = 0;
+  let size = n;
+  while (size > 1) {
+    const arg = level === 0 ? 'n' : `n/2^${level}`;
+    const nodes = Math.pow(2, level);
+    const tc1 = algoKey === 'mergeSort' ? `c·${arg}` : `~c·${arg}`;
+    const levelTC = '≈ c·n';
+    rows.push({ level, arg, tc1, nodes, levelTC });
+    level++;
+    size = Math.ceil(size / 2);
+  }
+  // base level
+  rows.push({ level, arg: '1', tc1: 'c', nodes: Math.pow(2, level), levelTC: `≈ c·2^${level}` });
+  return { rows };
+}
+
+function analysisBinarySearch(steps, currentIdx) {
+  if (!steps || steps.length === 0) return { rows: [] };
+  const rows = [];
+  for (let i = 0; i <= currentIdx && i < steps.length; i++) {
+    const s = steps[i];
+    if (s && Array.isArray(s.array)) {
+      const left = s.left ?? '-';
+      const right = s.right ?? '-';
+      const mid = s.mid ?? '-';
+      const range = (Number.isFinite(left) && Number.isFinite(right)) ? (right - left + 1) : '-';
+      let decision = '';
+      if (Number.isFinite(mid) && Number.isFinite(left) && Number.isFinite(right)) {
+        const mv = s.array[mid];
+        if (s.found && mid >= 0) decision = `arr[${mid}]=${mv} == target`;
+        else if (mv > s.target) decision = `arr[${mid}]=${mv} > ${s.target} ⇒ left`;
+        else if (mv < s.target) decision = `arr[${mid}]=${mv} < ${s.target} ⇒ right`;
+      }
+      rows.push({ level: i, arg: `|range|=${range}`, tc1: `check mid`, nodes: `mid=${mid}`, levelTC: decision });
+    }
+  }
+  return { rows };
+}
+
+function analysisLinearSearch(steps, currentIdx) {
+  if (!steps || steps.length === 0) return { rows: [] };
+  const rows = [];
+  for (let i = 0; i <= currentIdx && i < steps.length; i++) {
+    const s = steps[i];
+    if (s && Array.isArray(s.nodes)) {
+      const idx = s.currentNode ?? '-';
+      const val = (Number.isFinite(idx) && s.nodes[idx]) ? s.nodes[idx].value : '-';
+      const action = s.found && Number.isFinite(idx) ? `found ${val}` : (Number.isFinite(idx) ? `compare ${val}` : '');
+      rows.push({ level: i, arg: `i=${idx}`, tc1: 'compare', nodes: '-', levelTC: action });
+    }
+  }
+  return { rows };
+}
+
+function analysisSimpleSort(step, n) {
+  if (!step) return { rows: [] };
+  const sel = step.sel || [];
+  const cmp = step.compare || [];
+  const swp = step.swap || [];
+  const action = swp.length ? `swap ${swp.join(',')}` : (cmp.length ? `compare ${cmp.join(',')}` : (sel.length ? `select ${sel.join(',')}` : ''));
+  const rows = [
+    { level: idx + 1, arg: `n=${n}`, tc1: '—', nodes: (cmp.length ? cmp.join(',') : '—'), levelTC: action }
+  ];
+  return { rows };
+}
+
 function renderCurrentStep() {
   const currentType = algoType.value;
   if (currentType === 'sorting') {
@@ -563,34 +633,19 @@ function renderCurrentStep() {
     const algoKey = algoSelect.value;
     const n = steps?.[0]?.array?.length || parseArray(arrayInput.value).length || 0;
     if (n && (algoKey === 'mergeSort' || algoKey === 'quickSort')) {
-      const rows = [];
-      let level = 0;
-      let size = n;
-      while (size >= 1) {
-        const nodes = Math.pow(2, level) > n ? n : Math.pow(2, level);
-        const arg = level === 0 ? `n` : `n/2^${level}`;
-        const tc1 = algoKey === 'mergeSort' ? `c·${level === 0 ? 'n' : `n/2^${level}`}` : `~c·${level === 0 ? 'n' : `n/2^${level}`}`;
-        const levelTC = algoKey === 'mergeSort' ? `≈ c·n` : `≈ c·n`;
-        rows.push({ level, arg, tc1, nodes, levelTC });
-        level++;
-        size = Math.floor(size / 2);
-        if (size <= 1) {
-          rows.push({ level, arg: '1', tc1: 'c', nodes: Math.pow(2, level), levelTC: `≈ c·2^${level}` });
-          break;
-        }
-      }
-      renderAnalysis({ rows });
+      renderAnalysis(analysisDivideAndConquer(n, algoKey));
     } else {
-      renderAnalysis(null);
+      renderAnalysis(analysisSimpleSort(steps[idx], n));
     }
   } else {
     const algoKey = algoSelect.value;
     if (algoKey === 'linearSearch') {
       renderLinkedList(steps[idx]);
+      renderAnalysis(analysisLinearSearch(steps, idx));
     } else if (algoKey === 'binarySearch') {
       renderBinarySearchArray(steps[idx]);
+      renderAnalysis(analysisBinarySearch(steps, idx));
     }
-    renderAnalysis(null);
   }
   renderCode(run?.pseudocode ?? [], steps[idx]?.hlLines ?? []);
 }
