@@ -61,8 +61,9 @@
         visited.add(v);
         arr[vIdx] = ++order;
         push([vIdx], [], [], [5, 6], { stack: [...stack], visited: Array.from(visited), current: v });
-        const neighbors = (graph[v] || []).slice().reverse();
-        for (const w of neighbors) {
+        const neighbors = graph[v] || [];
+        for (let i = neighbors.length - 1; i >= 0; i--) {
+          const w = neighbors[i];
           const wIdx = indexOf.get(w);
           push([vIdx], [wIdx], [], [7, 8], { stack: [...stack], visited: Array.from(visited), current: v, neighbor: w });
           if (!visited.has(w)) {
