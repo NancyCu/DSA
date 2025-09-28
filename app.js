@@ -319,14 +319,31 @@ function edgesFrom(root) {
 function renderBSTStep() {
   treeVisual.innerHTML = '';
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.classList.add('edges-layer');
   treeVisual.appendChild(svg);
+  const nodesLayer = document.createElement('div');
+  nodesLayer.className = 'bst-nodes-layer';
+  treeVisual.appendChild(nodesLayer);
   const w = treeVisual.clientWidth || 700;
   const h = treeVisual.clientHeight || 400;
   const levelH = Math.max(70, h / 6);
   const nodes = computePositions(bstSession.state.root, w, levelH);
   const idToPos = new Map(nodes.map(n => [n.id, n]));
 
-  // draw edges
+  // level guide lines
+  const depthMax = Math.max(1, Math.ceil((h - 40) / levelH));
+  for (let d = 1; d <= Math.min(6, depthMax); d++) {
+    const y = d * levelH;
+    const lvl = document.createElementNS('http://www.w3.org/2000/svg','line');
+    lvl.setAttribute('x1', '0');
+    lvl.setAttribute('x2', String(w));
+    lvl.setAttribute('y1', String(y));
+    lvl.setAttribute('y2', String(y));
+    lvl.setAttribute('class', 'level-line');
+    svg.appendChild(lvl);
+  }
+
+  // draw edges with L/R labels
   for (const [a,b] of edgesFrom(bstSession.state.root)) {
     const pa = idToPos.get(a); const pb = idToPos.get(b);
     if (!pa || !pb) continue;
@@ -335,24 +352,40 @@ function renderBSTStep() {
     line.setAttribute('y1', pa.y);
     line.setAttribute('x2', pb.x);
     line.setAttribute('y2', pb.y);
-    line.setAttribute('stroke', '#3a5a9e');
-    line.setAttribute('stroke-width', '2');
+    line.setAttribute('class', 'edge');
     svg.appendChild(line);
+
+    // label
+    const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+    const mx = (pa.x + pb.x) / 2; const my = (pa.y + pb.y) / 2;
+    label.setAttribute('x', String(mx));
+    label.setAttribute('y', String(my - 4));
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('class', 'edge-label');
+    label.textContent = pb.x < pa.x ? 'L' : 'R';
+    svg.appendChild(label);
   }
 
   // draw nodes
   const step = (bstSession.steps && bstSession.steps[idx]) || null;
   const highlight = step?.highlight || {};
+  // Maintain a map of existing nodes in the DOM to animate positions
+  const domById = new Map();
+  // If previous layer existed, reuse nodes (not needed here since we recreate, but left for future incremental updates)
   for (const n of nodes) {
-    const div = document.createElement('div');
-    div.className = 'bst-node';
-    if (highlight.nodeId === n.id && highlight.op?.includes('visit')) div.classList.add('current');
-    if (highlight.nodeId === n.id && highlight.op === 'insert-new') div.classList.add('new');
-    if (highlight.nodeId === n.id && highlight.op === 'search-result' && highlight.found) div.classList.add('found');
+    let div = domById.get(n.id);
+    if (!div) {
+      div = document.createElement('div');
+      div.className = 'bst-node';
+      div.textContent = n.key;
+      nodesLayer.appendChild(div);
+      domById.set(n.id, div);
+    }
     div.style.left = `${n.x}px`;
     div.style.top = `${n.y}px`;
-    div.textContent = n.key;
-    treeVisual.appendChild(div);
+    div.classList.toggle('current', highlight.nodeId === n.id && (highlight.op?.includes('visit') || highlight.op === 'insert-visit' || highlight.op === 'search-visit'));
+    div.classList.toggle('new', highlight.nodeId === n.id && highlight.op === 'insert-new');
+    div.classList.toggle('found', highlight.nodeId === n.id && highlight.op === 'search-result' && highlight.found);
   }
 
   if (nodes.length === 0) {
