@@ -1,7 +1,11 @@
 // Binary Search with step generator + pseudocode mapping (non-module build)
 (function (global) {
   function binarySearch(input) {
-    if (!input || !Array.isArray(input.array)) {
+    if (
+      !input ||
+      !Array.isArray(input.array) ||
+      typeof input.target !== 'number'
+    ) {
       throw new Error('binarySearch expects { array: number[], target: number }');
     }
     const { array: source, target } = input;
