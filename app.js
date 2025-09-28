@@ -1,9 +1,16 @@
 // Minimal VisuAlgo-like starter (vanilla JS, no build step)
 import { insertionSort } from './algorithms/insertionSort.js';
+import { bubbleSort } from './algorithms/bubbleSort.js';
 
 const algorithms = {
-  insertionSort
+  insertionSort,
+  bubbleSort
 };
+
+const formatName = (key) =>
+  key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (c) => c.toUpperCase());
 
 const algoSelect = document.getElementById('algoSelect');
 const randomBtn = document.getElementById('randomBtn');
@@ -22,6 +29,19 @@ const visual = document.getElementById('visual');
 const codePane = document.querySelector('#codePane code');
 const complexityBody = document.getElementById('complexityBody');
 const notesBody = document.getElementById('notesBody');
+
+function populateAlgorithmSelect() {
+  algoSelect.innerHTML = '';
+  Object.keys(algorithms).forEach((key, index) => {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = formatName(key);
+    if (index === 0) {
+      option.selected = true;
+    }
+    algoSelect.appendChild(option);
+  });
+}
 
 let steps = [];
 let run = null;
@@ -127,6 +147,12 @@ function playLoop() {
 }
 
 // Event handlers
+algoSelect.onchange = () => {
+  const arr = parseArray(arrayInput.value);
+  stopPlaying();
+  buildSteps(algoSelect.value, arr);
+};
+
 randomBtn.onclick = () => {
   const arr = randomArray(10);
   arrayInput.value = arr.join(', ');
@@ -173,4 +199,6 @@ playBtn.onclick = () => {
 };
 
 // Boot
-buildSteps('insertionSort', parseArray(arrayInput.value));
+populateAlgorithmSelect();
+const defaultAlgo = algoSelect.value || Object.keys(algorithms)[0];
+buildSteps(defaultAlgo, parseArray(arrayInput.value));
