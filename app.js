@@ -287,17 +287,26 @@ function computePositions(root, width, levelHeight) {
   const scale = usableWidth / totalUnits;
 
   function layout(node, xStartUnits, depth) {
-    if (!node) return;
+    if (!node) return null;
+    const W = widths.get(node.id) || MIN_GAP;
     const wl = node.left ? (widths.get(node.left.id) || MIN_GAP) : 0;
-    // Position this node centered over the split between left and right
-    const xUnits = xStartUnits + wl;
-    const x = PADDING + xUnits * scale;
+    const wr = node.right ? (widths.get(node.right.id) || MIN_GAP) : 0;
+    const childrenTotal = wl + wr;
+    const leftStart = xStartUnits + Math.max(0, (W - childrenTotal) / 2);
+
+    const leftCenter = node.left ? layout(node.left, leftStart, depth + 1) : null;
+    const rightCenter = node.right ? layout(node.right, leftStart + wl, depth + 1) : null;
+
+    let centerUnits;
+    if (leftCenter != null && rightCenter != null) centerUnits = (leftCenter + rightCenter) / 2;
+    else if (leftCenter != null) centerUnits = leftCenter;
+    else if (rightCenter != null) centerUnits = rightCenter;
+    else centerUnits = xStartUnits + W / 2;
+
+    const x = PADDING + centerUnits * scale;
     const y = (depth + 1) * levelHeight;
     res.push({ id: node.id, key: node.key, x, y });
-    // Lay out left subtree within [xStartUnits, xStartUnits + wl)
-    layout(node.left, xStartUnits, depth + 1);
-    // Right subtree starts at xStartUnits + wl
-    layout(node.right, xStartUnits + wl, depth + 1);
+    return centerUnits;
   }
 
   layout(root, 0, 0);
