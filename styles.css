@@ -5,17 +5,45 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .topbar h1{margin:0;font-size:20px}
 .badge{font-size:12px;color:#111;background:var(--accent);padding:2px 6px;border-radius:999px;margin-left:8px}
 .topbar nav{display:flex;gap:8px;align-items:center}
-.topbar input{background:#0c1426;border:1px solid #223152;color:var(--ink);padding:6px 8px;border-radius:6px;min-width:220px}
+.topbar input, .topbar select{background:#0c1426;border:1px solid #223152;color:var(--ink);padding:6px 8px;border-radius:6px}
+.topbar input#arrayInput{min-width:220px}
 .topbar button, .controls button{background:#162541;border:1px solid #24365e;color:var(--ink);padding:6px 10px;border-radius:8px;cursor:pointer}
 .topbar button:hover, .controls button:hover{filter:brightness(1.1)}
 .grid{display:grid;grid-template-columns:1.5fr 1fr 0.8fr;gap:12px;padding:12px;max-width:1200px;margin:0 auto}
 .panel{background:var(--panel);border:1px solid #1f2a44;border-radius:12px;padding:12px;min-height:200px}
-#visual{height:320px;display:flex;align-items:flex-end;gap:6px;padding:12px;border:1px dashed #24365e;border-radius:10px;overflow-x:auto}
+#visual, #searchVisual{height:320px;display:flex;align-items:flex-end;gap:6px;padding:12px;border:1px dashed #24365e;border-radius:10px;overflow-x:auto}
 .bar{width:28px;background:linear-gradient(#2a63b8,#1b3f79);border-radius:6px 6px 0 0;position:relative;display:flex;align-items:flex-end;justify-content:center}
 .bar span{position:absolute;top:-24px;font-size:12px;color:var(--muted)}
 .bar.sel{outline:2px solid var(--accent)}
 .bar.compare{outline:2px dashed var(--warn)}
 .bar.swap{outline:2px solid var(--bad)}
+
+/* Linked List Visualization Styles */
+#searchVisual{flex-direction:column;align-items:center;justify-content:center}
+.target-info{font-size:18px;font-weight:bold;color:var(--accent);margin-bottom:20px}
+.linked-list-container{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+.head-label{font-size:14px;color:var(--warn);font-weight:bold;align-self:flex-start;margin-bottom:10px}
+.node-container{display:flex;align-items:center;gap:8px}
+.node{background:var(--panel);border:2px solid #24365e;border-radius:8px;padding:8px;min-width:60px;text-align:center;position:relative}
+.node.current{border-color:var(--accent);background:#1a2a48}
+.node.compare{border-color:var(--warn);background:#2b1f00}
+.node.found{border-color:var(--good);background:#0f2419}
+.node-value{font-size:16px;font-weight:bold;color:var(--ink)}
+.node-pointer{font-size:12px;color:var(--muted);margin-top:4px;border-top:1px solid #24365e;padding-top:4px}
+.arrow{font-size:20px;color:var(--accent)}
+
+/* Binary Search Array Visualization */
+.binary-array-container{display:flex;flex-direction:column;align-items:center;gap:20px}
+.array-elements{display:flex;gap:4px}
+.array-element{background:var(--panel);border:2px solid #24365e;border-radius:8px;padding:12px 8px;min-width:50px;text-align:center;position:relative;font-size:16px;font-weight:bold}
+.array-element.left-bound{border-color:var(--accent);background:#1a2a48}
+.array-element.right-bound{border-color:var(--accent);background:#1a2a48}
+.array-element.mid{border-color:var(--warn);background:#2b1f00}
+.array-element.found{border-color:var(--good);background:#0f2419}
+.index-label{position:absolute;bottom:-20px;font-size:10px;color:var(--muted);left:50%;transform:translateX(-50%)}
+.pointers-container{display:flex;gap:4px}
+.pointer-label{min-width:50px;text-align:center;font-size:14px;font-weight:bold;color:var(--accent);padding:4px}
+
 .controls{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
 .controls .speed{color:var(--muted);font-size:14px}
 .code .panel-title, .panel-title{font-weight:600;margin-bottom:8px;color:var(--accent)}
@@ -28,4 +56,4 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .complexity td:first-child{color:var(--muted)}
 .notes{margin-top:8px;color:#cfe1ff}
 .foot{color:var(--muted);text-align:center;padding:16px}
-@media (max-width: 980px){.grid{grid-template-columns:1fr}#visual{height:240px}}
+@media (max-width: 980px){.grid{grid-template-columns:1fr}#visual, #searchVisual{height:240px}}
