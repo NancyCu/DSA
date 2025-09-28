@@ -23,6 +23,7 @@ const searchingAlgorithms = {
 
 // Trees (BST)
 let bstSession = null; // holds {steps, state, api}
+let bstNodeEls = new Map(); // id -> HTMLElement, persistent for animations
 
 const formatName = (key) =>
   key
@@ -330,13 +331,15 @@ function renderBSTStep() {
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.classList.add('edges-layer');
   treeVisual.appendChild(svg);
-  const nodesLayer = document.createElement('div');
+  let nodesLayer = document.createElement('div');
   nodesLayer.className = 'bst-nodes-layer';
   treeVisual.appendChild(nodesLayer);
   const w = treeVisual.clientWidth || 700;
   const h = treeVisual.clientHeight || 400;
   const levelH = Math.max(70, h / 6);
-  const nodes = computePositions(bstSession.state.root, w, levelH);
+  const step = (bstSession.steps && bstSession.steps[idx]) || null;
+  const rootForStep = step?.tree || bstSession.state.root;
+  const nodes = computePositions(rootForStep, w, levelH);
   const idToPos = new Map(nodes.map(n => [n.id, n]));
 
   // level guide lines
@@ -353,7 +356,19 @@ function renderBSTStep() {
   }
 
   // draw edges with L/R labels
-  for (const [a,b] of edgesFrom(bstSession.state.root)) {
+  // determine active edge for this step (if comparing and choosing L/R)
+  let activeA = null, activeB = null;
+  if (step?.highlight?.dir && step?.highlight?.nodeId) {
+    // find the parent node in this snapshot
+    const findNode = (node, id) => !node ? null : (node.id === id ? node : (findNode(node.left, id) || findNode(node.right, id)));
+    const parentNode = findNode(rootForStep, step.highlight.nodeId);
+    if (parentNode) {
+      const child = step.highlight.dir === 'L' ? parentNode.left : parentNode.right;
+      if (child) { activeA = parentNode.id; activeB = child.id; }
+    }
+  }
+
+  for (const [a,b] of edgesFrom(rootForStep)) {
     const pa = idToPos.get(a); const pb = idToPos.get(b);
     if (!pa || !pb) continue;
     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -362,6 +377,7 @@ function renderBSTStep() {
     line.setAttribute('x2', pb.x);
     line.setAttribute('y2', pb.y);
     line.setAttribute('class', 'edge');
+    if (activeA === a && activeB === b) line.classList.add('edge-active');
     svg.appendChild(line);
 
     // label
@@ -376,25 +392,46 @@ function renderBSTStep() {
   }
 
   // draw nodes
-  const step = (bstSession.steps && bstSession.steps[idx]) || null;
   const highlight = step?.highlight || {};
-  // Maintain a map of existing nodes in the DOM to animate positions
-  const domById = new Map();
-  // If previous layer existed, reuse nodes (not needed here since we recreate, but left for future incremental updates)
+  // Animate nodes: reuse DOM elements across renders
+  const presentIds = new Set(nodes.map(n => n.id));
+  // Remove orphaned
+  for (const [id, el] of bstNodeEls.entries()) {
+    if (!presentIds.has(id)) {
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 200);
+      bstNodeEls.delete(id);
+    }
+  }
   for (const n of nodes) {
-    let div = domById.get(n.id);
+    let div = bstNodeEls.get(n.id);
     if (!div) {
       div = document.createElement('div');
       div.className = 'bst-node';
       div.textContent = n.key;
+      div.style.opacity = '0';
       nodesLayer.appendChild(div);
-      domById.set(n.id, div);
+      // next frame fade-in
+      requestAnimationFrame(() => { div.style.opacity = '1'; });
+      bstNodeEls.set(n.id, div);
     }
+    // update position (animates via CSS transition)
     div.style.left = `${n.x}px`;
     div.style.top = `${n.y}px`;
+    // update classes
     div.classList.toggle('current', highlight.nodeId === n.id && (highlight.op?.includes('visit') || highlight.op === 'insert-visit' || highlight.op === 'search-visit'));
     div.classList.toggle('new', highlight.nodeId === n.id && highlight.op === 'insert-new');
     div.classList.toggle('found', highlight.nodeId === n.id && highlight.op === 'search-result' && highlight.found);
+
+    // pulse on the active current node
+    const shouldPulse = highlight.nodeId === n.id && (highlight.op?.includes('visit') || highlight.op === 'insert-visit' || highlight.op === 'search-visit');
+    if (shouldPulse) {
+      // restart animation by removing and re-adding the class
+      div.classList.remove('pulse');
+      // force reflow
+      void div.offsetWidth;
+      div.classList.add('pulse');
+    }
   }
 
   if (nodes.length === 0) {
