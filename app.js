@@ -67,6 +67,9 @@ const analysisModeSel = document.getElementById('analysisMode');
 const analysisModeWrap = document.getElementById('analysisModeWrap');
 const analysisNumeric = document.getElementById('analysisNumeric');
 const analysisC = document.getElementById('analysisC');
+// Final Big O summary banner
+const analysisSummary = document.getElementById('analysisSummary');
+const analysisBigO = document.getElementById('analysisBigO');
 // Track last highlighted analysis row to animate changes
 let analysisLastHL = null;
 // Inputs panel controls
@@ -693,6 +696,8 @@ function renderBSTStep() {
       setTimeout(() => { bstTravelEl?.remove(); bstTravelEl = null; bstTravelKey = null; }, 250);
     }
   }
+  // Hide Big O banner in Trees mode (informational table only)
+  if (analysisSummary) analysisSummary.style.display = 'none';
 }
 
 function renderComplexity(meta) {
@@ -733,6 +738,62 @@ function renderAnalysis(model) {
   }
   if (analysisControls) analysisControls.style.display = model.showControls ? 'flex' : 'none';
   analysisLastHL = typeof model.hlIndex === 'number' ? model.hlIndex : null;
+}
+
+// Map algorithm to asymptotic Big O string
+function bigOFor(type, algoKey, options = {}) {
+  if (type === 'sorting') {
+    switch (algoKey) {
+      case 'mergeSort':
+        return 'O(n log n)';
+      case 'quickSort': {
+        const mode = options.mode || 'avg';
+        return mode === 'worst' ? 'O(n^2)' : 'O(n log n)';
+      }
+      case 'insertionSort':
+      case 'bubbleSort':
+      case 'selectionSort':
+        return 'O(n^2)';
+      default:
+        return '';
+    }
+  } else if (type === 'searching') {
+    switch (algoKey) {
+      case 'binarySearch':
+        return 'O(log n)';
+      case 'linearSearch':
+        return 'O(n)';
+      default:
+        return '';
+    }
+  }
+  return '';
+}
+
+// Show/hide the final Big O banner at the end of a run
+function updateAnalysisSummaryAtEnd() {
+  if (!analysisSummary || !analysisBigO) return;
+  const currentType = algoType.value;
+  // Trees: hide banner; table is informative only
+  if (currentType === 'trees') {
+    analysisSummary.style.display = 'none';
+    return;
+  }
+  const total = steps?.length || 0;
+  const atEnd = total > 0 && idx >= total - 1;
+  if (!atEnd) {
+    analysisSummary.style.display = 'none';
+    return;
+  }
+  const algoKey = algoSelect.value;
+  const mode = (currentType === 'sorting' && algoKey === 'quickSort') ? (analysisModeSel?.value || 'avg') : undefined;
+  const bigO = bigOFor(currentType, algoKey, { mode });
+  if (bigO) {
+    analysisBigO.textContent = bigO.startsWith('O(') ? bigO : `O(${bigO})`;
+    analysisSummary.style.display = 'flex';
+  } else {
+    analysisSummary.style.display = 'none';
+  }
 }
 
 // --- Analysis builders ---
@@ -894,6 +955,8 @@ function renderCurrentStep() {
     }
   }
   renderCode(run?.pseudocode ?? [], steps[idx]?.hlLines ?? []);
+  // Update final Big O banner visibility/value
+  updateAnalysisSummaryAtEnd();
 }
 
 // Handle analysis mode change
@@ -1231,7 +1294,9 @@ nextBtn.onclick = () => {
 };
 lastBtn.onclick = () => {
   stopPlaying();
-  setStep(steps.length - 1);
+  const currentType = algoType.value;
+  const total = currentType === 'trees' ? (bstSession?.steps?.length || 0) : steps.length;
+  setStep(total - 1);
   haptic('tick');
 };
 
