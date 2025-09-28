@@ -763,10 +763,13 @@ function analysisDivideAndConquer(n, algoKey, options = {}) {
   }
 
   while (size > 1) {
-    const argSym = level === 0 ? 'n' : `n/2^${level}`;
+    const denom = Math.pow(2, level);
+    const argSym = level === 0 ? 'n' : `n/${denom}`;
     const arg = numeric ? `${Math.max(1, Math.round(n/Math.pow(2,level)))}` : argSym;
     const nodes = numeric ? `${Math.pow(2,level)}` : `2^${level}`;
-    const tc1 = plusCN ? (numeric ? `${cval}·${Math.max(1, Math.round(n/Math.pow(2,level)))}` : `c·${argSym}`) : (numeric ? `${cval}` : `c`);
+    const tc1 = plusCN
+      ? (numeric ? `${cval}·${Math.max(1, Math.round(n/Math.pow(2,level)))}` : `c·${argSym}`)
+      : (numeric ? `${cval}` : `c`);
     const levelTC = plusCN ? (numeric ? `${cval*n}` : `c·n`) : (numeric ? `${cval*Math.pow(2,level)}` : `c·2^${level}`);
     rows.push({ level, arg, tc1, nodes, levelTC });
     level++;
