@@ -77,6 +77,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 .analysis thead th{background:#101a33;color:#9fb0d1;text-align:left}
 .analysis tr:last-child td{border-bottom:none}
 .analysis tfoot td{background:#0f1627;color:#e7eefc;font-weight:700;border-top:1px solid #24365e}
+.analysis tbody tr.hl td{background:#152241}
 .analysis td:nth-child(1){width:64px}
 .analysis td:nth-child(4){width:110px}
 .complexity{width:100%;border-collapse:collapse}

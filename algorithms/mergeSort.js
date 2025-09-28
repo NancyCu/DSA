@@ -27,8 +27,10 @@ export function mergeSort(input) {
     notes: 'Stable divide-and-conquer algorithm. Uses auxiliary array during merge.'
   };
 
-  function push(sel = [], compare = [], swap = [], hlLines = [1]) {
-    steps.push({ array: [...arr], sel, compare, swap, hlLines });
+  function push(sel = [], compare = [], swap = [], hlLines = [1], seg = null) {
+    const snapshot = { array: [...arr], sel, compare, swap, hlLines };
+    if (seg) snapshot.segment = seg; // {left,right}
+    steps.push(snapshot);
   }
 
   push([], [], [], [1]);
@@ -39,36 +41,36 @@ export function mergeSort(input) {
     let i = left;
     let j = mid + 1;
     let k = left;
-    push(Array.from({ length: right - left + 1 }, (_, idx) => left + idx), [], [], [7, 8]);
+    push(Array.from({ length: right - left + 1 }, (_, idx) => left + idx), [], [], [7, 8], { left, right });
     while (i <= mid && j <= right) {
-      push([i, j], [i, j], [], [9, 10]);
+      push([i, j], [i, j], [], [9, 10], { left, right });
       if (arr[i] <= arr[j]) {
         temp[k] = arr[i];
-        push([k], [], [i], [11]);
+        push([k], [], [i], [11], { left, right });
         i++;
       } else {
         temp[k] = arr[j];
-        push([k], [], [j], [12, 13]);
+        push([k], [], [j], [12, 13], { left, right });
         j++;
       }
       k++;
-      push([k - 1], [], [], [14]);
+      push([k - 1], [], [], [14], { left, right });
     }
     while (i <= mid) {
       temp[k] = arr[i];
-      push([k], [], [i], [15]);
+      push([k], [], [i], [15], { left, right });
       i++;
       k++;
     }
     while (j <= right) {
       temp[k] = arr[j];
-      push([k], [], [j], [15]);
+      push([k], [], [j], [15], { left, right });
       j++;
       k++;
     }
     for (let idx = left; idx <= right; idx++) {
       arr[idx] = temp[idx];
-      push([idx], [], [idx], [16]);
+      push([idx], [], [idx], [16], { left, right });
     }
   }
 
@@ -78,7 +80,7 @@ export function mergeSort(input) {
       return;
     }
     const mid = Math.floor((left + right) / 2);
-    push(Array.from({ length: right - left + 1 }, (_, idx) => left + idx), [], [], [1, 3]);
+    push(Array.from({ length: right - left + 1 }, (_, idx) => left + idx), [], [], [1, 3], { left, right });
     sort(left, mid);
     sort(mid + 1, right);
     merge(left, mid, right);

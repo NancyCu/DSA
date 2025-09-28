@@ -68,6 +68,21 @@ const analysisModeWrap = document.getElementById('analysisModeWrap');
 const analysisNumeric = document.getElementById('analysisNumeric');
 const analysisC = document.getElementById('analysisC');
 
+// ---- Persistence for analysis controls ----
+const LS_KEYS = {
+  numeric: 'visudsa.analysis.numeric',
+  c: 'visudsa.analysis.c',
+  mode: 'visudsa.analysis.mode',
+};
+try {
+  const savedNum = localStorage.getItem(LS_KEYS.numeric);
+  if (savedNum != null && analysisNumeric) analysisNumeric.checked = savedNum === '1';
+  const savedC = localStorage.getItem(LS_KEYS.c);
+  if (savedC != null && analysisC) analysisC.value = savedC;
+  const savedMode = localStorage.getItem(LS_KEYS.mode);
+  if (savedMode && analysisModeSel) analysisModeSel.value = savedMode;
+} catch {}
+
 function populateAlgorithmSelect() {
   const currentType = algoType.value;
   const algorithms = currentType === 'sorting' ? sortingAlgorithms : (currentType === 'searching' ? searchingAlgorithms : {});
@@ -559,7 +574,7 @@ function renderAnalysis(model) {
     return;
   }
   analysisBody.innerHTML = model.rows
-    .map((r) => `<tr><td>${r.level}</td><td>${r.arg}</td><td>${r.tc1}</td><td>${r.nodes}</td><td>${r.levelTC}</td></tr>`) 
+    .map((r, i) => `<tr class="${i === model.hlIndex ? 'hl' : ''}"><td>${r.level}</td><td>${r.arg}</td><td>${r.tc1}</td><td>${r.nodes}</td><td>${r.levelTC}</td></tr>`) 
     .join('');
   if (analysisFoot) {
     const totalSym = model.totalSym ?? model.total ?? '';
@@ -599,20 +614,21 @@ function analysisDivideAndConquer(n, algoKey, options = {}) {
     if (n > maxRows) rows.push({ level: '…', arg: '…', tc1: '…', nodes: '…', levelTC: '…' });
     const total = numeric ? `${cval}·${n}(${n}+1)/2 = ${cval * n * (n+1) / 2}` : `= c·n(n+1)/2 ≈ (c/2)·${n}²`;
     const showControls = true;
-    return { rows, total, showControls };
+    return { rows, total, showControls, hlIndex: Math.min(options.currentLevel ?? 0, rows.length - 1) };
   }
 
   while (size > 1) {
-    const arg = level === 0 ? 'n' : `n/2^${level}`;
-    const nodes = `2^${level}`;
-    const tc1 = plusCN ? (numeric ? `${cval}·${(n/Math.pow(2,level)).toFixed(0)}` : `c·${arg}`) : (numeric ? `${cval}` : `c`);
+    const argSym = level === 0 ? 'n' : `n/2^${level}`;
+    const arg = numeric ? `${Math.max(1, Math.round(n/Math.pow(2,level)))}` : argSym;
+    const nodes = numeric ? `${Math.pow(2,level)}` : `2^${level}`;
+    const tc1 = plusCN ? (numeric ? `${cval}·${Math.max(1, Math.round(n/Math.pow(2,level)))}` : `c·${argSym}`) : (numeric ? `${cval}` : `c`);
     const levelTC = plusCN ? (numeric ? `${cval*n}` : `c·n`) : (numeric ? `${cval*Math.pow(2,level)}` : `c·2^${level}`);
     rows.push({ level, arg, tc1, nodes, levelTC });
     level++;
     size = Math.ceil(size / 2);
   }
   // base level (size ~ 1)
-  rows.push({ level, arg: '1', tc1: numeric ? `${cval}` : 'c', nodes: `2^${level}`, levelTC: numeric ? `${cval*Math.pow(2,level)}` : `c·2^${level}` });
+  rows.push({ level, arg: '1', tc1: numeric ? `${cval}` : 'c', nodes: numeric ? `${Math.pow(2,level)}` : `2^${level}`, levelTC: numeric ? `${cval*Math.pow(2,level)}` : `c·2^${level}` });
   // Clip with ellipsis for long tables
   const maxRows = 10;
   if (rows.length > maxRows) {
@@ -630,7 +646,7 @@ function analysisDivideAndConquer(n, algoKey, options = {}) {
     totalNum = numeric ? `${cval*(Math.pow(2,k+1)-1)}` : '';
   }
   const showControls = isQS;
-  return { rows, totalSym, totalNum, showControls };
+  return { rows, totalSym, totalNum, showControls, hlIndex: Math.min(options.currentLevel ?? 0, rows.length - 1) };
 }
 
 function analysisBinarySearch(steps, currentIdx) {
@@ -679,9 +695,34 @@ function renderCurrentStep() {
     const n = steps?.[0]?.array?.length || parseArray(arrayInput.value).length || 0;
     if (n && (algoKey === 'mergeSort' || algoKey === 'quickSort')) {
       const mode = (algoKey === 'quickSort') ? (analysisModeSel?.value || 'avg') : undefined;
+      // Infer current recursion level by the size of the currently highlighted segment if possible
+      let currentLevel = 0;
+      const s = steps[idx];
+      let subSize = null;
+      if (s?.segment && (typeof s.segment.left === 'number' && typeof s.segment.right === 'number')) {
+        subSize = s.segment.right - s.segment.left + 1;
+      } else if (s?.segment && (typeof s.segment.low === 'number' && typeof s.segment.high === 'number')) {
+        subSize = s.segment.high - s.segment.low + 1;
+      } else {
+        const sel = Array.isArray(s?.sel) ? s.sel : [];
+        if (sel.length > 0) {
+          const minI = Math.min(...sel), maxI = Math.max(...sel);
+          subSize = (Number.isFinite(minI) && Number.isFinite(maxI)) ? (maxI - minI + 1) : null;
+        } else {
+          const cmp = Array.isArray(s?.compare) ? s.compare : [];
+          if (cmp.length >= 1) {
+            const minI = Math.min(...cmp), maxI = Math.max(...cmp);
+            subSize = (Number.isFinite(minI) && Number.isFinite(maxI)) ? (maxI - minI + 1) : null;
+          }
+        }
+      }
+      if (subSize != null && subSize > 0) {
+        const lvl = Math.round(Math.log2(n / Math.max(1, subSize)));
+        if (Number.isFinite(lvl) && lvl >= 0) currentLevel = Math.min(lvl, 64);
+      }
       const numeric = !!analysisNumeric?.checked;
       const c = Number(analysisC?.value) || 1;
-      const model = analysisDivideAndConquer(n, algoKey, { mode, numeric, c });
+      const model = analysisDivideAndConquer(n, algoKey, { mode, numeric, c, currentLevel });
       if (analysisControls) analysisControls.style.display = 'flex';
       if (analysisModeWrap) analysisModeWrap.style.display = (algoKey === 'quickSort') ? 'inline-flex' : 'none';
       renderAnalysis(model);
@@ -707,14 +748,15 @@ function renderCurrentStep() {
 if (analysisModeSel) {
   analysisModeSel.onchange = () => {
     // trigger re-render to update analysis
+    try { localStorage.setItem(LS_KEYS.mode, analysisModeSel.value); } catch {}
     renderCurrentStep();
   };
 }
 if (analysisNumeric) {
-  analysisNumeric.onchange = () => renderCurrentStep();
+  analysisNumeric.onchange = () => { try { localStorage.setItem(LS_KEYS.numeric, analysisNumeric.checked ? '1' : '0'); } catch {} renderCurrentStep(); };
 }
 if (analysisC) {
-  analysisC.onchange = () => renderCurrentStep();
+  analysisC.onchange = () => { try { localStorage.setItem(LS_KEYS.c, analysisC.value); } catch {} renderCurrentStep(); };
 }
 
 function buildSteps(algoKey, arr, target = null) {
