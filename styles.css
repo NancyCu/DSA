@@ -72,6 +72,9 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 .analysis th,.analysis td{border-bottom:1px solid #1f2a44;padding:6px 8px;font-size:13px;color:#cfe1ff}
 .analysis thead th{background:#101a33;color:#9fb0d1;text-align:left}
 .analysis tr:last-child td{border-bottom:none}
+.analysis tfoot td{background:#0f1627;color:#e7eefc;font-weight:700;border-top:1px solid #24365e}
+.analysis td:nth-child(1){width:64px}
+.analysis td:nth-child(4){width:110px}
 .complexity{width:100%;border-collapse:collapse}
 .complexity td{border-bottom:1px solid #1f2a44;padding:6px 4px;color:#cfe1ff}
 .complexity td:first-child{color:var(--muted)}

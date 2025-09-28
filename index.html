@@ -56,6 +56,13 @@
       <pre id="codePane"><code></code></pre>
       <div class="panel-sub">
         <div class="panel-title">Recursion Analysis</div>
+        <div class="analysis-controls" id="analysisControls" style="display:none;">
+          <label for="analysisMode">Mode:</label>
+          <select id="analysisMode">
+            <option value="avg">Average</option>
+            <option value="worst">Worst</option>
+          </select>
+        </div>
         <table class="analysis">
           <thead>
             <tr>
@@ -67,6 +74,7 @@
             </tr>
           </thead>
           <tbody id="analysisBody"></tbody>
+          <tfoot id="analysisFoot"></tfoot>
         </table>
       </div>
     </section>

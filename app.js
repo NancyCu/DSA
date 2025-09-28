@@ -61,6 +61,7 @@ const codePane = document.querySelector('#codePane code');
 const complexityBody = document.getElementById('complexityBody');
 const notesBody = document.getElementById('notesBody');
 const analysisBody = document.getElementById('analysisBody');
+const analysisFoot = document.getElementById('analysisFoot');
 
 function populateAlgorithmSelect() {
   const currentType = algoType.value;
@@ -548,31 +549,41 @@ function renderAnalysis(model) {
   if (!analysisBody) return;
   if (!model || !Array.isArray(model.rows) || model.rows.length === 0) {
     analysisBody.innerHTML = '';
+    if (analysisFoot) analysisFoot.innerHTML = '';
     return;
   }
   analysisBody.innerHTML = model.rows
     .map((r) => `<tr><td>${r.level}</td><td>${r.arg}</td><td>${r.tc1}</td><td>${r.nodes}</td><td>${r.levelTC}</td></tr>`) 
     .join('');
+  if (analysisFoot) {
+    const total = model.total ? model.total : '';
+    analysisFoot.innerHTML = `<tr><td colspan="4">Total</td><td>${total}</td></tr>`;
+  }
 }
 
 // --- Analysis builders ---
+function fmt(expr){ return String(expr).replace(/\*\*/g,'^'); }
+
 function analysisDivideAndConquer(n, algoKey) {
   if (!n || n <= 0) return { rows: [] };
   const rows = [];
   let level = 0;
   let size = n;
+  // Determine variant: +c (per node constant) vs +cn (per node linear)
+  const plusCN = (algoKey === 'mergeSort'); // merge: 2T(n/2)+cn, quick avg similar
   while (size > 1) {
     const arg = level === 0 ? 'n' : `n/2^${level}`;
-    const nodes = Math.pow(2, level);
-    const tc1 = algoKey === 'mergeSort' ? `c·${arg}` : `~c·${arg}`;
-    const levelTC = '≈ c·n';
+    const nodes = `2^${level}`;
+    const tc1 = plusCN ? `c·${arg}` : `c`;
+    const levelTC = plusCN ? `c·n` : `c·2^${level}`;
     rows.push({ level, arg, tc1, nodes, levelTC });
     level++;
     size = Math.ceil(size / 2);
   }
-  // base level
-  rows.push({ level, arg: '1', tc1: 'c', nodes: Math.pow(2, level), levelTC: `≈ c·2^${level}` });
-  return { rows };
+  // base level (size ~ 1)
+  rows.push({ level, arg: '1', tc1: 'c', nodes: `2^${level}`, levelTC: `c·2^${level}` });
+  const total = plusCN ? `≈ c·n·log₂n + c·2^k` : `≈ c·(2^{k+1} - 1)`;
+  return { rows, total };
 }
 
 function analysisBinarySearch(steps, currentIdx) {
@@ -595,7 +606,8 @@ function analysisBinarySearch(steps, currentIdx) {
       rows.push({ level: i, arg: `|range|=${range}`, tc1: `check mid`, nodes: `mid=${mid}`, levelTC: decision });
     }
   }
-  return { rows };
+  const total = `≈ O(log₂n) steps`;
+  return { rows, total };
 }
 
 function analysisLinearSearch(steps, currentIdx) {
@@ -610,7 +622,8 @@ function analysisLinearSearch(steps, currentIdx) {
       rows.push({ level: i, arg: `i=${idx}`, tc1: 'compare', nodes: '-', levelTC: action });
     }
   }
-  return { rows };
+  const total = rows.length ? `${rows.length} comparisons` : '';
+  return { rows, total };
 }
 
 function analysisSimpleSort(step, n) {
@@ -622,7 +635,7 @@ function analysisSimpleSort(step, n) {
   const rows = [
     { level: idx + 1, arg: `n=${n}`, tc1: '—', nodes: (cmp.length ? cmp.join(',') : '—'), levelTC: action }
   ];
-  return { rows };
+  return { rows, total: action };
 }
 
 function renderCurrentStep() {
