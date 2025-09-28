@@ -55,7 +55,7 @@
 
     function sort(low, high) {
       if (low < high) {
-        push(Array.from({ length: high - low + 1 }, (_, idx) => low + idx), [], [], [1, 2]);
+        push([low, high], [], [], [1, 2]);
         const pivot = partition(low, high);
         push([pivot], [], [], [3]);
         sort(low, pivot - 1);
