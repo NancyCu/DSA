@@ -86,6 +86,10 @@ function populateAlgorithmSelect() {
   const bstControls = [bstValueLabel, bstValue, bstInsertBtn, bstSearchBtn, bstClearBtn];
   bstControls.forEach(el => el.style.display = isTrees ? (el.tagName === 'INPUT' || el.tagName === 'LABEL' ? 'inline' : 'inline-block') : 'none');
 
+  // Toggle array controls for Trees mode
+  const arrayControls = [algoSelect, randomBtn, arrayInput, loadBtn];
+  arrayControls.forEach(el => el.style.display = isTrees ? 'none' : (el === algoSelect ? 'inline-block' : 'inline'));
+
   if (isTrees) {
     ensureBSTInitialized();
     renderBSTStep();
@@ -315,7 +319,8 @@ function renderBSTStep() {
   }
 
   // draw nodes
-  const highlight = bstSession.steps[idx]?.highlight || {};
+  const step = (bstSession.steps && bstSession.steps[idx]) || null;
+  const highlight = step?.highlight || {};
   for (const n of nodes) {
     const div = document.createElement('div');
     div.className = 'bst-node';
@@ -328,7 +333,24 @@ function renderBSTStep() {
     treeVisual.appendChild(div);
   }
 
-  stepCounter.textContent = `Step ${idx + 1}/${bstSession.steps.length}`;
+  if (nodes.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.position = 'absolute';
+    empty.style.left = '50%';
+    empty.style.top = '50%';
+    empty.style.transform = 'translate(-50%, -50%)';
+    empty.style.color = 'var(--muted)';
+    empty.style.fontSize = '14px';
+    empty.textContent = 'BST is empty. Use Insert to add a node.';
+    treeVisual.appendChild(empty);
+  }
+  if ((bstSession.steps?.length || 0) > 0) {
+    stepCounter.textContent = `Step ${idx + 1}/${bstSession.steps.length}`;
+  } else {
+    stepCounter.textContent = 'Step 0/0';
+  }
+  // Update pseudocode highlighting for the current BST step
+  renderCode(bstSession?.pseudocode ?? [], step?.hlLines ?? []);
 }
 
 function renderComplexity(meta) {
@@ -467,7 +489,11 @@ searchTarget.onchange = () => {
 // BST handlers
 function ensureBSTInitialized(initialArr) {
   if (!bstSession) {
-    const init = Array.isArray(initialArr) && initialArr.length ? initialArr : parseArray(arrayInput.value);
+    let init = Array.isArray(initialArr) && initialArr.length ? initialArr : parseArray(arrayInput.value);
+    if (!init || init.length === 0) {
+      // provide a sensible default demo tree
+      init = [8,3,10,1,6,14,4,7,13];
+    }
     const unique = [...new Set(init)];
     bstSession = createBST(unique);
     // set session data
@@ -497,7 +523,10 @@ bstSearchBtn.onclick = () => {
 };
 
 bstClearBtn.onclick = () => {
-  bstSession = null; idx = 0; renderBSTStep();
+  // Reset to a fresh empty BST session
+  bstSession = createBST([]);
+  idx = 0;
+  renderBSTStep();
 };
 
 firstBtn.onclick = () => {
