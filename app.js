@@ -67,12 +67,18 @@ const analysisModeSel = document.getElementById('analysisMode');
 const analysisModeWrap = document.getElementById('analysisModeWrap');
 const analysisNumeric = document.getElementById('analysisNumeric');
 const analysisC = document.getElementById('analysisC');
+// Track last highlighted analysis row to animate changes
+let analysisLastHL = null;
 
 // ---- Persistence for analysis controls ----
 const LS_KEYS = {
   numeric: 'visudsa.analysis.numeric',
   c: 'visudsa.analysis.c',
   mode: 'visudsa.analysis.mode',
+  algoType: 'visudsa.ui.algoType',
+  algo_sorting: 'visudsa.ui.algo.sorting',
+  algo_searching: 'visudsa.ui.algo.searching',
+  algo_trees: 'visudsa.ui.algo.trees',
 };
 try {
   const savedNum = localStorage.getItem(LS_KEYS.numeric);
@@ -97,6 +103,15 @@ function populateAlgorithmSelect() {
     }
     algoSelect.appendChild(option);
   });
+
+  // restore saved algorithm for this type if available
+  try {
+    const keyName = currentType === 'sorting' ? LS_KEYS.algo_sorting : (currentType === 'searching' ? LS_KEYS.algo_searching : LS_KEYS.algo_trees);
+    const savedAlgo = localStorage.getItem(keyName);
+    if (savedAlgo && Object.prototype.hasOwnProperty.call(algorithms, savedAlgo)) {
+      algoSelect.value = savedAlgo;
+    }
+  } catch {}
   
   // Show/hide search target input
   const isSearching = currentType === 'searching';
@@ -571,10 +586,15 @@ function renderAnalysis(model) {
     analysisBody.innerHTML = '';
     if (analysisFoot) analysisFoot.innerHTML = '';
     if (analysisControls) analysisControls.style.display = 'none';
+    analysisLastHL = null;
     return;
   }
+  const flashIndex = (typeof model.hlIndex === 'number' && model.hlIndex !== analysisLastHL) ? model.hlIndex : null;
   analysisBody.innerHTML = model.rows
-    .map((r, i) => `<tr class="${i === model.hlIndex ? 'hl' : ''}"><td>${r.level}</td><td>${r.arg}</td><td>${r.tc1}</td><td>${r.nodes}</td><td>${r.levelTC}</td></tr>`) 
+    .map((r, i) => {
+      const cls = (i === model.hlIndex ? ('hl' + (i === flashIndex ? ' flash' : '')) : '');
+      return `<tr class="${cls}"><td>${r.level}</td><td>${r.arg}</td><td>${r.tc1}</td><td>${r.nodes}</td><td>${r.levelTC}</td></tr>`;
+    })
     .join('');
   if (analysisFoot) {
     const totalSym = model.totalSym ?? model.total ?? '';
@@ -584,6 +604,7 @@ function renderAnalysis(model) {
     analysisFoot.innerHTML = `<tr><td colspan="4">Total</td><td>${totalCell}</td></tr>`;
   }
   if (analysisControls) analysisControls.style.display = model.showControls ? 'flex' : 'none';
+  analysisLastHL = typeof model.hlIndex === 'number' ? model.hlIndex : null;
 }
 
 // --- Analysis builders ---
@@ -663,7 +684,7 @@ function analysisBinarySearch(steps, currentIdx) {
     }
   }
   const total = `${rows.length}·c ≈ O(log₂n)`;
-  return { rows, total };
+  return { rows, total, hlIndex: rows.length ? rows.length - 1 : null };
 }
 
 function analysisLinearSearch(steps, currentIdx) {
@@ -677,7 +698,7 @@ function analysisLinearSearch(steps, currentIdx) {
     }
   }
   const total = rows.length ? `${rows.length}·c` : '';
-  return { rows, total };
+  return { rows, total, hlIndex: rows.length ? rows.length - 1 : null };
 }
 
 function analysisSimpleSort(step, n) {
@@ -817,6 +838,7 @@ function playLoop() {
 
 // Event handlers
 algoType.onchange = () => {
+  try { localStorage.setItem(LS_KEYS.algoType, algoType.value); } catch {}
   populateAlgorithmSelect();
   const arr = parseArray(arrayInput.value);
   const target = parseInt(searchTarget.value);
@@ -831,6 +853,11 @@ algoType.onchange = () => {
 };
 
 algoSelect.onchange = () => {
+  try {
+    const t = algoType.value;
+    const keyName = t === 'sorting' ? LS_KEYS.algo_sorting : (t === 'searching' ? LS_KEYS.algo_searching : LS_KEYS.algo_trees);
+    localStorage.setItem(keyName, algoSelect.value);
+  } catch {}
   const arr = parseArray(arrayInput.value);
   const target = parseInt(searchTarget.value);
   stopPlaying();
@@ -935,8 +962,21 @@ playBtn.onclick = () => {
   }
 };
 
-// Boot
+// Boot: restore algo type and selection
+try {
+  const savedType = localStorage.getItem(LS_KEYS.algoType);
+  if (savedType && ['sorting','searching','trees'].includes(savedType)) {
+    algoType.value = savedType;
+  }
+} catch {}
 populateAlgorithmSelect();
+// select saved algorithm for current type if available (populateAlgorithmSelect also tries)
+const currentType = algoType.value;
+try {
+  const keyName = currentType === 'sorting' ? LS_KEYS.algo_sorting : (currentType === 'searching' ? LS_KEYS.algo_searching : LS_KEYS.algo_trees);
+  const savedAlgo = localStorage.getItem(keyName);
+  if (savedAlgo) { algoSelect.value = savedAlgo; }
+} catch {}
 const defaultAlgo = algoSelect.value || Object.keys(sortingAlgorithms)[0];
 const initialArr = parseArray(arrayInput.value);
 const initialTarget = parseInt(searchTarget.value);
