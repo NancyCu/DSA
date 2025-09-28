@@ -25,6 +25,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 .inputs-panel input[type="checkbox"]{width:auto;height:18px;padding:0;border:none;background:transparent}
 .inputs-panel button{background:#162541;border:1px solid #24365e;color:var(--ink);padding:10px 12px;border-radius:8px;cursor:pointer}
 .bst-buttons{display:flex;gap:8px}
+.bst-buttons input{flex:1 1 220px;min-width:200px;max-width:320px}
 .inputs-panel #resetBtn{background:#2a1b1b;border-color:#4a2d2d}
 .inputs-panel #resetBtn:hover{filter:brightness(1.05)}
 .inputs-panel .inputs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -146,4 +147,5 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.bar{width:24px;margin-right:4px}
 	.array-element{min-width:44px;padding:10px 6px}
 	.pointer-label{min-width:44px}
+	.bst-buttons input{flex:1 1 140px;min-width:140px;max-width:220px}
 }

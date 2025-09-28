@@ -1231,7 +1231,9 @@ lastBtn.onclick = () => {
 };
 
 playBtn.onclick = () => {
-  if (!steps.length) return;
+  const currentType = algoType.value;
+  const total = currentType === 'trees' ? (bstSession?.steps?.length || 0) : steps.length;
+  if (total <= 1) return;
   playing = !playing;
   playBtn.textContent = playing ? '⏸ Pause' : '▶ Play';
   playBtn.setAttribute('aria-pressed', playing ? 'true' : 'false');
