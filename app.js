@@ -507,15 +507,21 @@ function renderBSTStep() {
   // Update analysis table for BST levels (informative, not exact TC)
   if (rootForStep) {
     const byLevelCounts = [];
+    const levelById = new Map();
     const q = [[rootForStep, 0]];
     while (q.length) {
       const [node, lv] = q.shift();
       byLevelCounts[lv] = (byLevelCounts[lv] || 0) + 1;
+      levelById.set(node.id, lv);
       if (node.left) q.push([node.left, lv + 1]);
       if (node.right) q.push([node.right, lv + 1]);
     }
     const rows = byLevelCounts.map((cnt, lv) => ({ level: lv, arg: '—', tc1: 'visit', nodes: cnt, levelTC: `${cnt}·visit` }));
-    renderAnalysis({ rows });
+    let hlIndex = null;
+    if (step?.highlight?.nodeId != null && levelById.has(step.highlight.nodeId)) {
+      hlIndex = levelById.get(step.highlight.nodeId);
+    }
+    renderAnalysis({ rows, hlIndex });
   } else {
     renderAnalysis(null);
   }
@@ -704,7 +710,7 @@ function analysisLinearSearch(steps, currentIdx) {
 function analysisSimpleSort(step, n) {
   if (!step) return { rows: [] };
   const rows = [ { level: idx + 1, arg: `n=${n}`, tc1: 'c', nodes: 1, levelTC: 'c' } ];
-  return { rows, total: `${idx + 1}·c` };
+  return { rows, total: `${idx + 1}·c`, hlIndex: 0 };
 }
 
 function renderCurrentStep() {
