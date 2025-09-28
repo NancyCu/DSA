@@ -262,24 +262,46 @@ function renderCode(pseudo, hlLines = []) {
 
 // --- BST layout helpers ---
 function computePositions(root, width, levelHeight) {
+  // Subtree-width-based tidy layout
   // Returns array of {id, key, x, y}
   const res = [];
-  let x = 0;
-  function inorder(node, depth) {
-    if (!node) return;
-    inorder(node.left, depth + 1);
-    const xpos = (++x) * (width / (countNodes(root) + 1));
-    const ypos = (depth + 1) * levelHeight;
-    res.push({ id: node.id, key: node.key, x: xpos, y: ypos });
-    inorder(node.right, depth + 1);
-  }
-  inorder(root, 0);
-  return res;
-}
+  if (!root) return res;
 
-function countNodes(node){
-  if (!node) return 0;
-  return 1 + countNodes(node.left) + countNodes(node.right);
+  const MIN_GAP = 56; // minimum horizontal spacing between sibling subtrees
+  const PADDING = 20; // left/right padding in px
+
+  const widths = new Map(); // nodeId -> subtree width in layout units
+
+  function measure(node) {
+    if (!node) return 0;
+    const wl = measure(node.left);
+    const wr = measure(node.right);
+    // If leaf, width = MIN_GAP; else sum of children widths, but at least MIN_GAP
+    const w = Math.max(MIN_GAP, (wl || 0) + (wr || 0));
+    widths.set(node.id, w);
+    return w;
+  }
+
+  const totalUnits = measure(root) || MIN_GAP;
+  const usableWidth = Math.max(2 * PADDING + MIN_GAP, width - 2 * PADDING);
+  const scale = usableWidth / totalUnits;
+
+  function layout(node, xStartUnits, depth) {
+    if (!node) return;
+    const wl = node.left ? (widths.get(node.left.id) || MIN_GAP) : 0;
+    // Position this node centered over the split between left and right
+    const xUnits = xStartUnits + wl;
+    const x = PADDING + xUnits * scale;
+    const y = (depth + 1) * levelHeight;
+    res.push({ id: node.id, key: node.key, x, y });
+    // Lay out left subtree within [xStartUnits, xStartUnits + wl)
+    layout(node.left, xStartUnits, depth + 1);
+    // Right subtree starts at xStartUnits + wl
+    layout(node.right, xStartUnits + wl, depth + 1);
+  }
+
+  layout(root, 0, 0);
+  return res;
 }
 
 function edgesFrom(root) {
