@@ -562,8 +562,11 @@ function renderAnalysis(model) {
     .map((r) => `<tr><td>${r.level}</td><td>${r.arg}</td><td>${r.tc1}</td><td>${r.nodes}</td><td>${r.levelTC}</td></tr>`) 
     .join('');
   if (analysisFoot) {
-    const total = model.total ? model.total : '';
-    analysisFoot.innerHTML = `<tr><td colspan="4">Total</td><td>${total}</td></tr>`;
+    const totalSym = model.totalSym ?? model.total ?? '';
+    const totalNum = model.totalNum ?? '';
+    const both = totalNum && totalSym && totalNum !== totalSym;
+    const totalCell = both ? `<div>${totalSym}</div><div>${totalNum}</div>` : (totalNum || totalSym);
+    analysisFoot.innerHTML = `<tr><td colspan="4">Total</td><td>${totalCell}</td></tr>`;
   }
   if (analysisControls) analysisControls.style.display = model.showControls ? 'flex' : 'none';
 }
@@ -610,14 +613,24 @@ function analysisDivideAndConquer(n, algoKey, options = {}) {
   }
   // base level (size ~ 1)
   rows.push({ level, arg: '1', tc1: numeric ? `${cval}` : 'c', nodes: `2^${level}`, levelTC: numeric ? `${cval*Math.pow(2,level)}` : `c·2^${level}` });
-  let total;
+  // Clip with ellipsis for long tables
+  const maxRows = 10;
+  if (rows.length > maxRows) {
+    const head = rows.slice(0, 4);
+    const tail = rows.slice(-2);
+    const ellipsis = { level: '…', arg: '…', tc1: '…', nodes: '…', levelTC: '…' };
+    rows.splice(0, rows.length, ...head, ellipsis, ...tail);
+  }
+  let totalSym, totalNum;
   if (plusCN) {
-    total = numeric ? `${cval}·${n}·log₂${n} + ${cval}·2^${k}` : `≈ c·${n}·log₂${n} + c·2^${k}`;
+    totalSym = `≈ c·${n}·log₂${n} + c·2^${k}`;
+    totalNum = numeric ? `${cval*n*Math.ceil(Math.log2(n)) + cval*Math.pow(2,k)}` : '';
   } else {
-    total = numeric ? `${cval}·(2^{${k}+1} - 1)` : `≈ c·(2^{${k}+1} - 1)`;
+    totalSym = `≈ c·(2^{${k}+1} - 1)`;
+    totalNum = numeric ? `${cval*(Math.pow(2,k+1)-1)}` : '';
   }
   const showControls = isQS;
-  return { rows, total, showControls };
+  return { rows, totalSym, totalNum, showControls };
 }
 
 function analysisBinarySearch(steps, currentIdx) {
