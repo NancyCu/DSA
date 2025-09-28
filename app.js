@@ -62,6 +62,8 @@ const complexityBody = document.getElementById('complexityBody');
 const notesBody = document.getElementById('notesBody');
 const analysisBody = document.getElementById('analysisBody');
 const analysisFoot = document.getElementById('analysisFoot');
+const analysisControls = document.getElementById('analysisControls');
+const analysisModeSel = document.getElementById('analysisMode');
 
 function populateAlgorithmSelect() {
   const currentType = algoType.value;
@@ -550,6 +552,7 @@ function renderAnalysis(model) {
   if (!model || !Array.isArray(model.rows) || model.rows.length === 0) {
     analysisBody.innerHTML = '';
     if (analysisFoot) analysisFoot.innerHTML = '';
+    if (analysisControls) analysisControls.style.display = 'none';
     return;
   }
   analysisBody.innerHTML = model.rows
@@ -559,18 +562,19 @@ function renderAnalysis(model) {
     const total = model.total ? model.total : '';
     analysisFoot.innerHTML = `<tr><td colspan="4">Total</td><td>${total}</td></tr>`;
   }
+  if (analysisControls) analysisControls.style.display = model.showControls ? 'flex' : 'none';
 }
 
 // --- Analysis builders ---
 function fmt(expr){ return String(expr).replace(/\*\*/g,'^'); }
 
-function analysisDivideAndConquer(n, algoKey) {
+function analysisDivideAndConquer(n, algoKey, options = {}) {
   if (!n || n <= 0) return { rows: [] };
   const rows = [];
   let level = 0;
   let size = n;
   // Determine variant: +c (per node constant) vs +cn (per node linear)
-  const plusCN = (algoKey === 'mergeSort'); // merge: 2T(n/2)+cn, quick avg similar
+  const plusCN = (algoKey === 'mergeSort') || (algoKey === 'quickSort' && options.mode === 'avg');
   while (size > 1) {
     const arg = level === 0 ? 'n' : `n/2^${level}`;
     const nodes = `2^${level}`;
@@ -583,7 +587,8 @@ function analysisDivideAndConquer(n, algoKey) {
   // base level (size ~ 1)
   rows.push({ level, arg: '1', tc1: 'c', nodes: `2^${level}`, levelTC: `c·2^${level}` });
   const total = plusCN ? `≈ c·n·log₂n + c·2^k` : `≈ c·(2^{k+1} - 1)`;
-  return { rows, total };
+  const showControls = (algoKey === 'quickSort');
+  return { rows, total, showControls };
 }
 
 function analysisBinarySearch(steps, currentIdx) {
@@ -646,7 +651,8 @@ function renderCurrentStep() {
     const algoKey = algoSelect.value;
     const n = steps?.[0]?.array?.length || parseArray(arrayInput.value).length || 0;
     if (n && (algoKey === 'mergeSort' || algoKey === 'quickSort')) {
-      renderAnalysis(analysisDivideAndConquer(n, algoKey));
+      const mode = (algoKey === 'quickSort') ? (analysisModeSel?.value || 'avg') : undefined;
+      renderAnalysis(analysisDivideAndConquer(n, algoKey, { mode }));
     } else {
       renderAnalysis(analysisSimpleSort(steps[idx], n));
     }
@@ -661,6 +667,14 @@ function renderCurrentStep() {
     }
   }
   renderCode(run?.pseudocode ?? [], steps[idx]?.hlLines ?? []);
+}
+
+// Handle analysis mode change
+if (analysisModeSel) {
+  analysisModeSel.onchange = () => {
+    // trigger re-render to update analysis
+    renderCurrentStep();
+  };
 }
 
 function buildSteps(algoKey, arr, target = null) {
