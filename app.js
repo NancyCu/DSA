@@ -262,14 +262,14 @@ function renderCode(pseudo, hlLines = []) {
 }
 
 // --- BST layout helpers ---
-function computePositions(root, width, levelHeight) {
+function computePositions(root, width, levelHeight, opts = {}) {
   // Subtree-width-based tidy layout
   // Returns array of {id, key, x, y}
   const res = [];
   if (!root) return res;
 
-  const MIN_GAP = 56; // minimum horizontal spacing between sibling subtrees
-  const PADDING = 20; // left/right padding in px
+  const MIN_GAP = typeof opts.minGap === 'number' ? opts.minGap : 56; // px
+  const PADDING = typeof opts.padding === 'number' ? opts.padding : 20; // px
 
   const widths = new Map(); // nodeId -> subtree width in layout units
 
@@ -314,6 +314,11 @@ function computePositions(root, width, levelHeight) {
   return res;
 }
 
+function depthOf(node){
+  if (!node) return 0;
+  return 1 + Math.max(depthOf(node.left), depthOf(node.right));
+}
+
 function edgesFrom(root) {
   const edges = [];
   function dfs(node){
@@ -336,16 +341,20 @@ function renderBSTStep() {
   treeVisual.appendChild(nodesLayer);
   const w = treeVisual.clientWidth || 700;
   const h = treeVisual.clientHeight || 400;
-  const levelH = Math.max(70, h / 6);
   const step = (bstSession.steps && bstSession.steps[idx]) || null;
   const rootForStep = step?.tree || bstSession.state.root;
-  const nodes = computePositions(rootForStep, w, levelH);
+  // Compute depth to fit vertical space
+  const d = Math.max(1, depthOf(rootForStep));
+  const levelH = Math.max(56, Math.min(110, (h - 40) / d));
+  // Adaptive horizontal gap by viewport width
+  const minGap = Math.max(36, Math.min(90, w / 12));
+  const nodes = computePositions(rootForStep, w, levelH, { minGap, padding: Math.max(10, Math.min(24, w * 0.03)) });
   const idToPos = new Map(nodes.map(n => [n.id, n]));
 
   // level guide lines
-  const depthMax = Math.max(1, Math.ceil((h - 40) / levelH));
-  for (let d = 1; d <= Math.min(6, depthMax); d++) {
-    const y = d * levelH;
+  const depthMax = Math.max(1, d);
+  for (let i = 1; i <= Math.min(8, depthMax); i++) {
+    const y = i * levelH;
     const lvl = document.createElementNS('http://www.w3.org/2000/svg','line');
     lvl.setAttribute('x1', '0');
     lvl.setAttribute('x2', String(w));
@@ -668,3 +677,19 @@ const defaultAlgo = algoSelect.value || Object.keys(sortingAlgorithms)[0];
 const initialArr = parseArray(arrayInput.value);
 const initialTarget = parseInt(searchTarget.value);
 buildSteps(defaultAlgo, initialArr, initialTarget);
+
+// Re-render tree on container resize for responsiveness
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(() => {
+    if (algoType.value === 'trees') {
+      renderBSTStep();
+    }
+  });
+  ro.observe(document.getElementById('treeVisual'));
+} else {
+  window.addEventListener('resize', () => {
+    if (algoType.value === 'trees') {
+      renderBSTStep();
+    }
+  });
+}
