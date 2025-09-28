@@ -111,13 +111,13 @@ try {
   if (inputsBody && inputsToggle) {
     if (collapsed) {
       inputsBody.classList.add('collapsed');
-      inputsToggle.setAttribute('aria-expanded','false');
-      inputsToggle.textContent = '▸';
+  inputsToggle.setAttribute('aria-expanded','false');
+  inputsToggle.textContent = '›';
       if (miniToolbar) miniToolbar.style.display = 'flex';
       if (inputsPanel) inputsPanel.classList.add('is-collapsed');
     } else {
-      inputsToggle.setAttribute('aria-expanded','true');
-      inputsToggle.textContent = '▾';
+  inputsToggle.setAttribute('aria-expanded','true');
+  inputsToggle.textContent = '⌄';
       if (miniToolbar) miniToolbar.style.display = 'none';
       if (inputsPanel) inputsPanel.classList.remove('is-collapsed');
     }
@@ -150,9 +150,9 @@ try {
   const hasPref = localStorage.getItem(LS_KEYS.inputsCollapsed) !== null;
   if (!hasPref && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
     if (inputsBody && inputsToggle && !inputsBody.classList.contains('collapsed')) {
-      inputsBody.classList.add('collapsed');
-      inputsToggle.setAttribute('aria-expanded','false');
-      inputsToggle.textContent = '▸';
+  inputsBody.classList.add('collapsed');
+  inputsToggle.setAttribute('aria-expanded','false');
+  inputsToggle.textContent = '›';
       if (miniToolbar) miniToolbar.style.display = 'flex';
       if (inputsPanel) inputsPanel.classList.add('is-collapsed');
     }
@@ -893,8 +893,8 @@ if (inputsToggle && inputsBody) {
   inputsToggle.onclick = () => {
     const willCollapse = !inputsBody.classList.contains('collapsed');
   inputsBody.classList.toggle('collapsed', willCollapse);
-    inputsToggle.setAttribute('aria-expanded', willCollapse ? 'false' : 'true');
-    inputsToggle.textContent = willCollapse ? '▸' : '▾';
+  inputsToggle.setAttribute('aria-expanded', willCollapse ? 'false' : 'true');
+  inputsToggle.textContent = willCollapse ? '›' : '⌄';
     try { localStorage.setItem(LS_KEYS.inputsCollapsed, willCollapse ? '1' : '0'); } catch {}
     if (miniToolbar) miniToolbar.style.display = willCollapse ? 'flex' : 'none';
   if (inputsPanel) inputsPanel.classList.toggle('is-collapsed', willCollapse);
@@ -985,9 +985,9 @@ if (resetBtn) {
     } catch {}
     // Restore defaults
     if (inputsBody && inputsToggle) {
-      inputsBody.classList.remove('collapsed');
-      inputsToggle.setAttribute('aria-expanded','true');
-      inputsToggle.textContent = '▾';
+  inputsBody.classList.remove('collapsed');
+  inputsToggle.setAttribute('aria-expanded','true');
+  inputsToggle.textContent = '⌄';
     }
     if (inputsPanel) inputsPanel.classList.remove('is-collapsed');
     if (sortedToggle) sortedToggle.checked = false;

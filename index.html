@@ -15,7 +15,7 @@
     <section class="panel inputs-panel" aria-label="Inputs">
       <div class="inputs-header">
         <div class="panel-title">Inputs</div>
-        <button id="inputsToggle" class="inputs-toggle" aria-expanded="true" aria-controls="inputsBody" title="Collapse inputs">▾</button>
+  <button id="inputsToggle" class="inputs-toggle" aria-expanded="true" aria-controls="inputsBody" title="Collapse inputs">⌄</button>
       </div>
       <div class="inputs-body" id="inputsBody">
         <div class="inputs-row">
@@ -42,10 +42,14 @@
             <button id="randomBtn" title="Randomize input">🎲 Random</button>
             <button id="loadBtn">Load</button>
             <label class="sorted-toggle" title="Generate sorted after random">
-              <input type="checkbox" id="sortedToggle" /> Sorted
+              <input type="checkbox" id="sortedToggle" />
+              <span class="switch" aria-hidden="true"></span>
+              <span class="switch-label">Sorted</span>
             </label>
             <label class="sorted-toggle" title="Vibrate on key actions">
-              <input type="checkbox" id="hapticsToggle" /> Haptics
+              <input type="checkbox" id="hapticsToggle" />
+              <span class="switch" aria-hidden="true"></span>
+              <span class="switch-label">Haptics</span>
             </label>
             <button id="resetBtn" title="Reset to defaults">Reset</button>
           </div>
