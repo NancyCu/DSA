@@ -415,6 +415,10 @@ function renderBSTStep() {
       requestAnimationFrame(() => { div.style.opacity = '1'; });
       bstNodeEls.set(n.id, div);
     }
+    // ensure element is attached to current layer (after re-render clears container)
+    if (div.parentElement !== nodesLayer) {
+      nodesLayer.appendChild(div);
+    }
     // update position (animates via CSS transition)
     div.style.left = `${n.x}px`;
     div.style.top = `${n.y}px`;
