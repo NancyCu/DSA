@@ -743,29 +743,58 @@ function renderAnalysis(model) {
   analysisLastHL = typeof model.hlIndex === 'number' ? model.hlIndex : null;
 }
 
-// Map algorithm to asymptotic Big O string
+// Helpers to assess input order
+function isSortedNonDecreasing(a){
+  for (let i=1;i<a.length;i++){ if (a[i] < a[i-1]) return false; } return true;
+}
+function isSortedNonIncreasing(a){
+  for (let i=1;i<a.length;i++){ if (a[i] > a[i-1]) return false; } return true;
+}
+
+// Map algorithm to asymptotic Big O string based on current inputs/steps
 function bigOFor(type, algoKey, options = {}) {
+  const steps = options.steps || [];
+  const arr0 = Array.isArray(options.arr) ? options.arr : (steps?.[0]?.array ?? []);
   if (type === 'sorting') {
     switch (algoKey) {
       case 'mergeSort':
         return 'O(n log n)';
       case 'quickSort': {
-        const mode = options.mode || 'avg';
-        return mode === 'worst' ? 'O(n^2)' : 'O(n log n)';
+        // With last-element pivot, monotonic arrays are worst-case
+        if (isSortedNonDecreasing(arr0) || isSortedNonIncreasing(arr0)) return 'O(n^2)';
+        // Otherwise assume average balanced partitions
+        return 'O(n log n)';
       }
-      case 'insertionSort':
-      case 'bubbleSort':
+      case 'insertionSort': {
+        if (isSortedNonDecreasing(arr0)) return 'O(n)';
+        if (isSortedNonIncreasing(arr0)) return 'O(n^2)';
+        return 'O(n^2)';
+      }
+      case 'bubbleSort': {
+        // Best when no swaps occurred
+        const anySwap = steps.some(s => Array.isArray(s.swap) && s.swap.length > 0);
+        return anySwap ? 'O(n^2)' : 'O(n)';
+      }
       case 'selectionSort':
         return 'O(n^2)';
       default:
         return '';
     }
   } else if (type === 'searching') {
+    const target = options.target;
     switch (algoKey) {
-      case 'binarySearch':
+      case 'binarySearch': {
+        const sorted = [...arr0].sort((a,b)=>a-b);
+        const midIdx = Math.floor((sorted.length - 1) / 2);
+        if (sorted.length > 0 && target === sorted[midIdx]) return 'O(1)';
         return 'O(log n)';
-      case 'linearSearch':
+      }
+      case 'linearSearch': {
+        if (arr0.length === 0) return 'O(1)';
+        if (arr0[0] === target) return 'O(1)';
+        // Otherwise, may be anywhere or not found
         return 'O(n)';
+      }
       default:
         return '';
     }
@@ -793,7 +822,10 @@ function updateAnalysisSummaryAtEnd() {
   }
   const algoKey = algoSelect.value;
   const mode = (currentType === 'sorting' && algoKey === 'quickSort') ? (analysisModeSel?.value || 'avg') : undefined;
-  const bigO = bigOFor(currentType, algoKey, { mode });
+  // Determine current input state
+  const arrNow = parseArray(arrayInput.value);
+  const targetVal = parseInt(searchTarget.value);
+  const bigO = bigOFor(currentType, algoKey, { mode, steps, arr: arrNow, target: targetVal });
   if (bigO) {
     analysisBigO.textContent = bigO.startsWith('O(') ? bigO : `O(${bigO})`;
     // make sure it's in the flow, then animate in
