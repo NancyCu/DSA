@@ -8,7 +8,7 @@ export function bubbleSort(input) {
     '    for j ← 0 to n-2-i',
     '        if A[j] > A[j+1]',
     '            swap A[j], A[j+1]',
-    '    if not swapped break'
+    '    if not swapped then break'
   ];
 
   const meta = {
