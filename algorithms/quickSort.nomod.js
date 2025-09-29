@@ -148,8 +148,10 @@
       `.trim()
     };
 
-    function push(sel = [], compare = [], swap = [], hlLines = [1]) {
-      steps.push({ array: [...arr], sel, compare, swap, hlLines });
+    function push(sel = [], compare = [], swap = [], hlLines = [1], seg = null) {
+      const snapshot = { array: [...arr], sel, compare, swap, hlLines };
+      if (seg) snapshot.segment = seg; // {low, high}
+      steps.push(snapshot);
     }
 
     push([], [], [], [1]);
@@ -157,33 +159,33 @@
     function partition(low, high) {
       const pivotValue = arr[high];
       let i = low - 1;
-      push([high], [], [], [6, 7]);
+      push([high], [], [], [6, 7], { low, high });
       for (let j = low; j < high; j++) {
-        push([low, high, i + 1], [j, high], [], [8, 9, 10]);
+        push([low, high, i + 1], [j, high], [], [8, 9, 10], { low, high });
         if (arr[j] <= pivotValue) {
           i++;
           const tmp = arr[i];
           arr[i] = arr[j];
           arr[j] = tmp;
-          push([i], [], [i, j], [11, 12]);
+          push([i], [], [i, j], [11, 12], { low, high });
         }
       }
       const tmp = arr[i + 1];
       arr[i + 1] = arr[high];
       arr[high] = tmp;
-      push([i + 1], [], [i + 1, high], [13]);
+      push([i + 1], [], [i + 1, high], [13], { low, high });
       return i + 1;
     }
 
     function sort(low, high) {
       if (low < high) {
-        push([low, high], [], [], [1, 2]);
+        push([low, high], [], [], [1, 2], { low, high });
         const pivot = partition(low, high);
-        push([pivot], [], [], [3]);
+        push([pivot], [], [], [3], { low, high });
         sort(low, pivot - 1);
         sort(pivot + 1, high);
       } else if (low === high) {
-        push([low], [], [], [1]);
+        push([low], [], [], [1], { low, high });
       }
     }
 
