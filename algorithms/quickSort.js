@@ -233,11 +233,19 @@ export function quickSort(input, options = {}) {
     partitionCall.pivotIndex = finalPivotPos;
     partitionCall.arrayAfter = [...arr];
     
-    // Add subarray information
-    const leftSubarray = finalPivotPos > low ? `[${low}, ${finalPivotPos - 1}]` : 'none';
-    const rightSubarray = finalPivotPos < high ? `[${finalPivotPos + 1}, ${high}]` : 'none';
-    partitionCall.leftSubarray = leftSubarray;
-    partitionCall.rightSubarray = rightSubarray;
+    // Add subarray information with actual elements
+    const leftSubarray = finalPivotPos > low ? 
+      arr.slice(low, finalPivotPos).map(x => x.toString()).join(', ') : 'none';
+    const rightSubarray = finalPivotPos < high ? 
+      arr.slice(finalPivotPos + 1, high + 1).map(x => x.toString()).join(', ') : 'none';
+    
+    partitionCall.leftSubarray = leftSubarray === 'none' ? leftSubarray : `[${leftSubarray}]`;
+    partitionCall.rightSubarray = rightSubarray === 'none' ? rightSubarray : `[${rightSubarray}]`;
+    
+    // Also store raw element arrays for tree visualization
+    partitionCall.leftElements = finalPivotPos > low ? arr.slice(low, finalPivotPos) : [];
+    partitionCall.rightElements = finalPivotPos < high ? arr.slice(finalPivotPos + 1, high + 1) : [];
+    partitionCall.subarrayElements = arr.slice(low, high + 1);
     
     // Add recursion tree node information
     partitionCall.recursionLevel = getRecursionLevel(low, high);
