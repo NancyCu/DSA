@@ -88,7 +88,7 @@
         </table>
         <p class="note-footnote">Trace the scan row from left to right: each comparison either paints the slot green (≤ pivot) or leaves it red (> pivot). Once <code>j</code> reaches the end, the pivot trades places with the first red item, yielding the lower/upper partitions shown underneath.</p>
       </div>
-        <div class="note-section">
+          <div class="note-section">
           <h3>Pivot improvements &amp; variations</h3>
           <ul>
             <li><strong>Median-of-three:</strong> choose the median of <code>A[low]</code>, <code>A[mid]</code>, <code>A[high]</code> and swap it into <code>A[high]</code>. This guards against already sorted inputs that trigger the quadratic worst case.</li>
