@@ -919,7 +919,7 @@ function renderRecursionTree(partitionCalls) {
   }
   
   // Get the original array from the first partition call
-  const originalArray = partitionCalls.length > 0 ? partitionCalls[0].arrayBefore : [];
+  const originalArray = partitionCalls.length > 0 ? (partitionCalls[0].arrayBefore ?? []) : [];
   
   // Build a tree structure from partition calls
   const treeNodes = partitionCalls.map(call => ({
