@@ -820,14 +820,38 @@ function renderInteractiveQuickSortTables() {
 function renderPartitionCallsTable(step) {
   const partitionCalls = step.partitionCalls || [];
   
+  // Header explanation and tree diagram
+  const headerExplanation = `
+    <div class="partition-table-header">
+      <p class="table-explanation">
+        <strong>Each row = one partition call. Only the pivot shown is guaranteed to be in its final position. 
+        Sorting is finished after all recursive calls.</strong>
+      </p>
+      <div class="recursion-tree-container">
+        <div class="recursion-tree">
+          ${renderRecursionTree(partitionCalls)}
+        </div>
+      </div>
+    </div>
+  `;
+  
   if (partitionCalls.length === 0) {
     return `
-      <table class="note-table">
+      ${headerExplanation}
+      <table class="note-table partition-table">
         <thead>
-          <tr><th>Call</th><th>Subarray</th><th>Pivot Value</th><th>Pivot Index</th><th>Array after partition</th></tr>
+          <tr>
+            <th>Call</th>
+            <th>Subarray</th>
+            <th>Pivot Value</th>
+            <th>Pivot Index</th>
+            <th>Left Subarray</th>
+            <th>Right Subarray</th>
+            <th>Array after partition</th>
+          </tr>
         </thead>
         <tbody>
-          <tr><td colspan="5" style="text-align: center; color: #9fb0d1;">No partition calls yet - step through the algorithm to see them</td></tr>
+          <tr><td colspan="7" style="text-align: center; color: #9fb0d1;">No partition calls yet - step through the algorithm to see them</td></tr>
         </tbody>
       </table>
     `;
@@ -836,27 +860,94 @@ function renderPartitionCallsTable(step) {
   const rows = partitionCalls.map(call => {
     const arrayStr = call.arrayAfter ? `[${call.arrayAfter.join(', ')}]` : 'In progress...';
     const pivotIndex = call.pivotIndex !== null ? call.pivotIndex : '—';
+    const leftSubarray = call.leftSubarray || '—';
+    const rightSubarray = call.rightSubarray || '—';
+    
     return `
-      <tr>
+      <tr id="call-row-${call.call}" class="partition-call-row" data-call="${call.call}">
         <td>${call.call}</td>
         <td>${call.subarray}</td>
         <td>${call.pivotValue}</td>
         <td>${pivotIndex}</td>
+        <td class="subarray-cell">${leftSubarray}</td>
+        <td class="subarray-cell">${rightSubarray}</td>
         <td><code>${arrayStr}</code></td>
       </tr>
     `;
   }).join('');
   
   return `
-    <table class="note-table">
+    ${headerExplanation}
+    <table class="note-table partition-table">
       <thead>
-        <tr><th>Call</th><th>Subarray</th><th>Pivot Value</th><th>Pivot Index</th><th>Array after partition</th></tr>
+        <tr>
+          <th>Call</th>
+          <th>Subarray</th>
+          <th>Pivot Value</th>
+          <th>Pivot Index</th>
+          <th>Left Subarray</th>
+          <th>Right Subarray</th>
+          <th>Array after partition</th>
+        </tr>
       </thead>
       <tbody>
         ${rows}
       </tbody>
     </table>
   `;
+}
+
+function renderRecursionTree(partitionCalls) {
+  if (partitionCalls.length === 0) {
+    return '<div class="tree-placeholder">Tree will appear as calls are made</div>';
+  }
+  
+  // Build a tree structure from partition calls
+  const treeNodes = partitionCalls.map(call => ({
+    call: call.call,
+    subarray: call.subarray,
+    parentCall: call.parentCall,
+    level: call.recursionLevel || 0,
+    leftSubarray: call.leftSubarray,
+    rightSubarray: call.rightSubarray
+  }));
+  
+  // Simple tree visualization with connected nodes
+  const maxLevel = Math.max(...treeNodes.map(n => n.level));
+  let treeHTML = '<div class="tree-levels">';
+  
+  for (let level = 0; level <= maxLevel; level++) {
+    const nodesAtLevel = treeNodes.filter(n => n.level === level);
+    if (nodesAtLevel.length > 0) {
+      treeHTML += `<div class="tree-level level-${level}">`;
+      nodesAtLevel.forEach(node => {
+        treeHTML += `
+          <div class="tree-node" data-call="${node.call}" onclick="highlightTableRow(${node.call})">
+            <div class="node-label">Call ${node.call}</div>
+            <div class="node-subarray">${node.subarray}</div>
+          </div>
+        `;
+      });
+      treeHTML += '</div>';
+    }
+  }
+  
+  treeHTML += '</div>';
+  return treeHTML;
+}
+
+function highlightTableRow(callNumber) {
+  // Remove previous highlights
+  document.querySelectorAll('.partition-call-row').forEach(row => {
+    row.classList.remove('highlighted');
+  });
+  
+  // Highlight the selected row
+  const targetRow = document.getElementById(`call-row-${callNumber}`);
+  if (targetRow) {
+    targetRow.classList.add('highlighted');
+    targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 function renderCurrentArrayState(step) {

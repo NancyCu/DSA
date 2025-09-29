@@ -132,6 +132,32 @@ export function quickSort(input, options = {}) {
 
   push([], [], [], [1]);
 
+  // Helper functions for recursion tree tracking
+  function getRecursionLevel(low, high) {
+    // Calculate depth based on subarray size
+    const size = high - low + 1;
+    const totalSize = arr.length;
+    return Math.floor(Math.log2(totalSize / size));
+  }
+
+  function getParentCall(low, high) {
+    // Find the parent call that would have created this subarray
+    for (let i = partitionCalls.length - 1; i >= 0; i--) {
+      const call = partitionCalls[i];
+      if (call.pivotIndex !== null) {
+        // Check if this subarray could be left child
+        if (call.pivotIndex - 1 >= low && call.low <= low && high <= call.pivotIndex - 1) {
+          return call.call;
+        }
+        // Check if this subarray could be right child
+        if (call.pivotIndex + 1 <= high && call.pivotIndex + 1 <= low && high <= call.high) {
+          return call.call;
+        }
+      }
+    }
+    return null; // Root call
+  }
+
   function choosePivot(low, high, callNumber) {
     if (customPivots[callNumber] !== undefined) {
       return Math.max(low, Math.min(high, customPivots[callNumber]));
@@ -206,6 +232,17 @@ export function quickSort(input, options = {}) {
     // Complete the partition call record
     partitionCall.pivotIndex = finalPivotPos;
     partitionCall.arrayAfter = [...arr];
+    
+    // Add subarray information
+    const leftSubarray = finalPivotPos > low ? `[${low}, ${finalPivotPos - 1}]` : 'none';
+    const rightSubarray = finalPivotPos < high ? `[${finalPivotPos + 1}, ${high}]` : 'none';
+    partitionCall.leftSubarray = leftSubarray;
+    partitionCall.rightSubarray = rightSubarray;
+    
+    // Add recursion tree node information
+    partitionCall.recursionLevel = getRecursionLevel(low, high);
+    partitionCall.parentCall = getParentCall(low, high);
+    
     partitionCalls.push(partitionCall);
     callCounter++;
     

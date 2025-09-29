@@ -164,6 +164,43 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 .notes .array-element-selected{box-shadow:inset 0 0 0 2px var(--accent)!important}
 .bar.clickable-pivot{cursor:pointer;transition:all 0.2s ease;border:2px dashed rgba(113,183,255,0.5);box-shadow:0 0 8px rgba(113,183,255,0.3)}
 .bar.clickable-pivot:hover{filter:brightness(1.3);transform:scale(1.08);border:2px solid rgba(113,183,255,0.9);box-shadow:0 0 12px rgba(113,183,255,0.6)}
+
+/* Enhanced Partition Table Styles */
+.partition-table-header{margin:12px 0}
+.table-explanation{background:rgba(113,183,255,0.1);border:1px solid rgba(113,183,255,0.3);border-radius:6px;padding:10px;margin:8px 0;font-size:13px;line-height:1.4}
+.recursion-tree-container{margin:12px 0;padding:12px;background:#0f1627;border:1px solid #1f2a44;border-radius:8px}
+.recursion-tree{display:flex;flex-direction:column;gap:8px;min-height:60px}
+.tree-placeholder{text-align:center;color:var(--muted);font-style:italic;padding:20px}
+.tree-levels{display:flex;flex-direction:column;gap:12px}
+.tree-level{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.tree-node{background:#162541;border:1px solid #24365e;border-radius:6px;padding:8px 12px;cursor:pointer;transition:all 0.2s ease;min-width:80px;text-align:center}
+.tree-node:hover{background:#1f2f4a;border-color:#3a4d7a;transform:scale(1.05)}
+.tree-node.active{background:var(--accent);color:#0b1220;border-color:var(--accent)}
+.node-label{font-weight:600;font-size:11px;color:#9fb0d1}
+.node-subarray{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* Enhanced partition table */
+.partition-table{font-size:12px;margin-top:12px}
+.partition-table th{font-size:11px;padding:8px 4px}
+.partition-table td{padding:6px 4px}
+.partition-call-row{transition:background-color 0.3s ease}
+.partition-call-row.highlighted{background:rgba(113,183,255,0.2)!important;border:1px solid rgba(113,183,255,0.5)}
+.subarray-cell{font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;color:var(--muted)}
+
+/* Desktop enhancements */
+@media (min-width: 981px){
+  .partition-table{font-size:13px;width:100%;table-layout:fixed}
+  .partition-table th:nth-child(1){width:8%}
+  .partition-table th:nth-child(2){width:15%}
+  .partition-table th:nth-child(3){width:12%}
+  .partition-table th:nth-child(4){width:12%}
+  .partition-table th:nth-child(5){width:15%}
+  .partition-table th:nth-child(6){width:15%}
+  .partition-table th:nth-child(7){width:23%}
+  .recursion-tree-container{max-width:none}
+  .tree-level{justify-content:flex-start;margin-left:calc(var(--level) * 40px)}
+  .tree-node{min-width:100px}
+}
 .foot{color:var(--muted);text-align:center;padding:16px}
 @media (max-width: 980px){
 	.grid{grid-template-columns:1fr;grid-template-areas:"inputs" "visualization" "complexity" "pseudocode"}
@@ -176,6 +213,21 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.controls button{padding:10px 12px}
 	.controls .speed{font-size:12px}
 	#codePane{max-height:240px}
+	
+	/* Mobile partition table optimizations */
+	.partition-table{font-size:11px;overflow-x:auto;display:block;white-space:nowrap}
+	.partition-table thead,.partition-table tbody,.partition-table tr{display:block}
+	.partition-table th,.partition-table td{display:inline-block;padding:4px 6px;vertical-align:top;border-right:1px solid #1f2a44;min-width:60px;word-break:break-word;white-space:normal}
+	.partition-table th:last-child,.partition-table td:last-child{border-right:none;min-width:100px}
+	.partition-table th{background:#101a33;font-weight:600;font-size:10px}
+	
+	/* Mobile tree adjustments */
+	.recursion-tree-container{padding:8px;margin:8px 0}
+	.tree-node{min-width:60px;padding:6px 8px;font-size:10px}
+	.node-label{font-size:10px}
+	.node-subarray{font-size:9px}
+	.tree-level{gap:8px}
+	.table-explanation{font-size:12px;padding:8px}
 }
 
 @media (max-width: 640px){
