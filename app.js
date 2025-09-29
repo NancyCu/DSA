@@ -231,8 +231,9 @@ let playing = false;
 let timer = null;
 
 function parseArray(text) {
+  // Split by comma or whitespace, supporting both formats for mobile compatibility
   return text
-    .split(',')
+    .split(/[,\s]+/)
     .map((s) => Number(s.trim()))
     .filter((n) => Number.isFinite(n));
 }
