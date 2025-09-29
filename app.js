@@ -253,6 +253,13 @@ function renderBars(state) {
     if (state.swap?.includes(i)) bar.classList.add('swap');
     bar.style.height = `${20 + (v / max) * 200}px`;
     bar.title = String(v);
+    
+    // Add click handler for custom pivot selection in quicksort
+    if (algoSelect.value === 'quickSort' && currentPivotStrategy === 'custom') {
+      bar.classList.add('clickable-pivot');
+      bar.addEventListener('click', () => selectCustomPivot(i));
+    }
+    
     const label = document.createElement('span');
     label.textContent = v;
     bar.appendChild(label);
@@ -714,6 +721,221 @@ function renderComplexity(meta) {
     .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
     .join('');
   notesBody.innerHTML = meta?.notes ?? '';
+  
+  // Set up interactive quicksort controls if it's quicksort
+  if (algoSelect.value === 'quickSort') {
+    setupInteractiveQuickSort();
+  }
+}
+
+// Global variables for quicksort interactivity
+let currentPivotStrategy = 'last';
+let customPivotSelections = [];
+let pivotSelectionStep = 0;
+
+function setupInteractiveQuickSort() {
+  const pivotStrategySelect = document.getElementById('pivotStrategy');
+  const resetPivotsBtn = document.getElementById('resetPivots');
+  const customPivotInfo = document.getElementById('customPivotInfo');
+  
+  if (pivotStrategySelect) {
+    pivotStrategySelect.value = currentPivotStrategy;
+    pivotStrategySelect.addEventListener('change', (e) => {
+      currentPivotStrategy = e.target.value;
+      customPivotInfo.style.display = e.target.value === 'custom' ? 'block' : 'none';
+      
+      if (e.target.value !== 'custom') {
+        // Regenerate algorithm with new pivot strategy
+        regenerateQuickSortWithStrategy(currentPivotStrategy);
+      } else {
+        // Reset custom selections and prepare for user input
+        customPivotSelections = [];
+        pivotSelectionStep = 0;
+        updateCustomPivotVisualization();
+      }
+    });
+  }
+  
+  if (resetPivotsBtn) {
+    resetPivotsBtn.addEventListener('click', () => {
+      customPivotSelections = [];
+      pivotSelectionStep = 0;
+      if (currentPivotStrategy === 'custom') {
+        updateCustomPivotVisualization();
+      } else {
+        regenerateQuickSortWithStrategy(currentPivotStrategy);
+      }
+    });
+  }
+  
+  // Initial render
+  renderInteractiveQuickSortTables();
+}
+
+function regenerateQuickSortWithStrategy(strategy) {
+  const arr = parseArray(arrayInput.value);
+  const options = { 
+    pivotStrategy: strategy,
+    customPivots: strategy === 'custom' ? customPivotSelections : []
+  };
+  
+  stopPlaying();
+  run = quickSort(arr, options);
+  steps = run.steps ?? [];
+  if (!steps.length) {
+    steps = [{ array: [...arr], hlLines: [] }];
+  }
+  idx = Math.max(0, Math.min(idx, steps.length - 1));
+  renderCurrentStep();
+  renderComplexity(run.meta ?? {});
+}
+
+function updateCustomPivotVisualization() {
+  if (currentPivotStrategy === 'custom') {
+    // Make the main array elements clickable for pivot selection
+    const elements = document.querySelectorAll('#visual .element');
+    elements.forEach((el, index) => {
+      el.classList.add('clickable-pivot');
+      el.addEventListener('click', () => selectCustomPivot(index));
+    });
+  }
+}
+
+function selectCustomPivot(index) {
+  // Add the selected pivot to our custom selections
+  customPivotSelections[pivotSelectionStep] = index;
+  pivotSelectionStep++;
+  
+  // Regenerate the algorithm with the new pivot
+  regenerateQuickSortWithStrategy('custom');
+}
+
+function renderInteractiveQuickSortTables() {
+  const step = steps[idx];
+  if (!step || !run?.meta) return;
+  
+  const partitionTable = document.getElementById('interactivePartitionTable');
+  const arrayTable = document.getElementById('interactiveArrayTable');
+  
+  if (partitionTable) {
+    partitionTable.innerHTML = renderPartitionCallsTable(step);
+  }
+  
+  if (arrayTable) {
+    arrayTable.innerHTML = renderCurrentArrayState(step);
+  }
+}
+
+function renderPartitionCallsTable(step) {
+  const partitionCalls = step.partitionCalls || [];
+  
+  if (partitionCalls.length === 0) {
+    return `
+      <table class="note-table">
+        <thead>
+          <tr><th>Call</th><th>Subarray</th><th>Pivot Value</th><th>Pivot Index</th><th>Array after partition</th></tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="5" style="text-align: center; color: #9fb0d1;">No partition calls yet - step through the algorithm to see them</td></tr>
+        </tbody>
+      </table>
+    `;
+  }
+  
+  const rows = partitionCalls.map(call => {
+    const arrayStr = call.arrayAfter ? `[${call.arrayAfter.join(', ')}]` : 'In progress...';
+    const pivotIndex = call.pivotIndex !== null ? call.pivotIndex : '—';
+    return `
+      <tr>
+        <td>${call.call}</td>
+        <td>${call.subarray}</td>
+        <td>${call.pivotValue}</td>
+        <td>${pivotIndex}</td>
+        <td><code>${arrayStr}</code></td>
+      </tr>
+    `;
+  }).join('');
+  
+  return `
+    <table class="note-table">
+      <thead>
+        <tr><th>Call</th><th>Subarray</th><th>Pivot Value</th><th>Pivot Index</th><th>Array after partition</th></tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderCurrentArrayState(step) {
+  const arr = step.array;
+  const partitionInfo = step.partitionInfo;
+  
+  if (!arr || arr.length === 0) return '';
+  
+  // Create index headers
+  const indexHeaders = arr.map((_, i) => `<th>${i}</th>`).join('');
+  
+  // Create current array row with appropriate styling based on partition state
+  const currentArrayCells = arr.map((value, i) => {
+    let cellClass = 'cell';
+    
+    if (partitionInfo) {
+      const { action, low, high, j, pivotValue, i: partitionI } = partitionInfo;
+      
+      if (i === high) {
+        cellClass += ' cell-pivot'; // The pivot
+      } else if (action === 'compare' && i < j) {
+        // Elements that have been processed
+        cellClass += value <= pivotValue ? ' cell-lte' : ' cell-gt';
+      } else if (action === 'compare' && i === j) {
+        // Currently being compared
+        cellClass += ' cell-unseen';
+      } else if (i >= low && i < high) {
+        // In the subarray being processed
+        if (i <= partitionI) {
+          cellClass += ' cell-lte';
+        } else if (i > j) {
+          cellClass += ' cell-unseen';
+        } else {
+          cellClass += ' cell-gt';
+        }
+      }
+    }
+    
+    const clickable = currentPivotStrategy === 'custom' && !partitionInfo ? ' array-element-clickable' : '';
+    return `<td><span class="${cellClass}${clickable}" data-index="${i}">${value}</span></td>`;
+  }).join('');
+  
+  let description = 'Initial array';
+  if (partitionInfo) {
+    const { action, low, high, j, pivotValue } = partitionInfo;
+    if (action === 'start-partition') {
+      description = `Starting partition of [${low}, ${high}] with pivot = ${pivotValue}`;
+    } else if (action === 'compare') {
+      description = `Comparing A[${j}] = ${arr[j]} with pivot = ${pivotValue}`;
+    } else if (action === 'final-swap') {
+      description = `Final swap - pivot in correct position`;
+    }
+  }
+  
+  return `
+    <table class="note-table note-array-table">
+      <thead>
+        <tr>
+          <th scope="row">Index</th>
+          ${indexHeaders}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">${description}</th>
+          ${currentArrayCells}
+        </tr>
+      </tbody>
+    </table>
+  `;
 }
 
 function renderAnalysis(model) {
@@ -997,6 +1219,12 @@ function renderCurrentStep() {
     }
   }
   renderCode(run?.pseudocode ?? [], steps[idx]?.hlLines ?? []);
+  
+  // Render interactive quicksort tables if applicable
+  if (algoType.value === 'sorting' && algoSelect.value === 'quickSort') {
+    renderInteractiveQuickSortTables();
+  }
+  
   // Update final Big O banner visibility/value
   updateAnalysisSummaryAtEnd();
 }
