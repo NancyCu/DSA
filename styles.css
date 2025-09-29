@@ -364,11 +364,13 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 .tree-connection::before {
     content: '';
     position: absolute;
-    width: 2px;
+    width: 3px;
     height: 45px;
-    background: linear-gradient(180deg, #4a5d8a 0%, #6a7daa 100%);
+    background: linear-gradient(180deg, #6a7daa 0%, #8a9dca 100%);
     transform-origin: top center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    opacity: 1;
+    border-radius: 1px;
 }
 
 .tree-connection.left-connection {
@@ -376,9 +378,12 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 }
 
 .tree-connection.left-connection::before {
-    background: linear-gradient(145deg, #4a5d8a 0%, #8a9dca 100%);
+    background: linear-gradient(145deg, #6a7daa 0%, #8a9dca 100%);
     transform: rotate(calc((var(--child-position, 0) - var(--parent-position, 0)) * 15deg));
     transform-origin: top center;
+    opacity: 1;
+    width: 3px;
+    border-radius: 1px;
 }
 
 .tree-connection.right-connection {
@@ -386,9 +391,12 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 }
 
 .tree-connection.right-connection::before {
-    background: linear-gradient(215deg, #8a9dca 0%, #4a5d8a 100%);
+    background: linear-gradient(215deg, #8a9dca 0%, #6a7daa 100%);
     transform: rotate(calc((var(--child-position, 0) - var(--parent-position, 0)) * 15deg));
     transform-origin: top center;
+    opacity: 1;
+    width: 3px;
+    border-radius: 1px;
 }
 
 /* Enhanced partition table */
