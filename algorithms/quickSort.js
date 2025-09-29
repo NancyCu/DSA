@@ -1,7 +1,11 @@
 // Quick Sort with step generator + pseudocode mapping (ES module)
-export function quickSort(input) {
+export function quickSort(input, options = {}) {
   const arr = [...input];
   const steps = [];
+  const partitionCalls = []; // Track all partition calls
+  let callCounter = 0;
+  const { pivotStrategy = 'last', customPivots = [] } = options;
+  
   const pseudocode = [
     'quickSort(A, low, high)',
     '    if low < high',
@@ -24,68 +28,39 @@ export function quickSort(input) {
     space: 'O(log n)',
     notes: `
       <div class="note-section">
-        <h3>Partition walk-through</h3>
+        <h3>Interactive Partition Walk-through</h3>
         <p>
-          Using the Lomuto scheme with the <em>last</em> element as the pivot, every call to
+          Using the Lomuto scheme with a chosen pivot element, every call to
           <code>partition(A, start, end)</code> moves that pivot into its final sorted position.
-          The example below shows the pivot index returned for <code>[27, 90, 2, 40, 45, 80, 10, 70, 85, 30]</code>.
+          The table below updates as the algorithm progresses and shows the pivot index returned.
         </p>
-        <table class="note-table">
-          <thead>
-            <tr><th>Call</th><th>Subarray</th><th>Pivot index</th><th>Array after partition</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td>[0, 9]</td><td>3</td><td><code>[27, 2, 10, 30, 45, 80, 90, 70, 85, 40]</code></td></tr>
-            <tr><td>2</td><td>[0, 2]</td><td>1</td><td><code>[2, 10, 27, 30, 45, 80, 90, 70, 85, 40]</code></td></tr>
-            <tr><td>3</td><td>[4, 9]</td><td>4</td><td><code>[2, 10, 27, 30, 40, 80, 90, 70, 85, 45]</code></td></tr>
-            <tr><td>4</td><td>[5, 9]</td><td>5</td><td><code>[2, 10, 27, 30, 40, 45, 90, 70, 85, 80]</code></td></tr>
-            <tr><td>5</td><td>[6, 9]</td><td>7</td><td><code>[2, 10, 27, 30, 40, 45, 70, 80, 85, 90]</code></td></tr>
-            <tr><td>6</td><td>[8, 9]</td><td>9</td><td><code>[2, 10, 27, 30, 40, 45, 70, 80, 85, 90]</code></td></tr>
-          </tbody>
-        </table>
+        <div class="pivot-controls">
+          <label for="pivotStrategy">Pivot Strategy:</label>
+          <select id="pivotStrategy">
+            <option value="last">Last Element (Default)</option>
+            <option value="first">First Element</option>
+            <option value="median-of-three">Median of Three</option>
+            <option value="random">Random</option>
+            <option value="custom">Custom (Click Array Elements)</option>
+          </select>
+          <button id="resetPivots">Reset Pivots</button>
+        </div>
+        <div id="customPivotInfo" style="display: none;">
+          <p><strong>Custom Mode:</strong> Click on array elements to choose pivots for each partition call.</p>
+        </div>
+        <div id="interactivePartitionTable">
+          <!-- Dynamic table will be inserted here -->
+        </div>
         <div class="note-array-legend">
           <span class="cell-label"><span class="cell-swatch cell-lte">≤ pivot</span> moved left</span>
           <span class="cell-label"><span class="cell-swatch cell-gt">&gt; pivot</span> stays right</span>
           <span class="cell-label"><span class="cell-swatch cell-unseen">unprocessed</span> pending scan</span>
-          <span class="cell-label"><span class="cell-swatch cell-pivot">pivot</span> last element</span>
+          <span class="cell-label"><span class="cell-swatch cell-pivot">pivot</span> chosen element</span>
         </div>
-        <table class="note-table note-array-table">
-          <thead>
-            <tr>
-              <th scope="row">Index</th>
-              <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">During scan (j = 3)</th>
-              <td><span class="cell cell-lte">27</span></td>
-              <td><span class="cell cell-gt">90</span></td>
-              <td><span class="cell cell-lte">2</span></td>
-              <td><span class="cell cell-gt">40</span></td>
-              <td><span class="cell cell-unseen">45</span></td>
-              <td><span class="cell cell-unseen">80</span></td>
-              <td><span class="cell cell-unseen">10</span></td>
-              <td><span class="cell cell-unseen">70</span></td>
-              <td><span class="cell cell-unseen">85</span></td>
-              <td><span class="cell cell-pivot">30</span></td>
-            </tr>
-            <tr>
-              <th scope="row">After partition</th>
-              <td><span class="cell cell-lte">27</span></td>
-              <td><span class="cell cell-lte">2</span></td>
-              <td><span class="cell cell-lte">10</span></td>
-              <td><span class="cell cell-pivot">30</span></td>
-              <td><span class="cell cell-gt">45</span></td>
-              <td><span class="cell cell-gt">80</span></td>
-              <td><span class="cell cell-gt">90</span></td>
-              <td><span class="cell cell-gt">70</span></td>
-              <td><span class="cell cell-gt">85</span></td>
-              <td><span class="cell cell-gt">40</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="note-footnote">Trace the scan row from left to right: each comparison either paints the slot green (≤ pivot) or leaves it red (> pivot). Once <code>j</code> reaches the end, the pivot trades places with the first red item, yielding the lower/upper partitions shown underneath.</p>
+        <div id="interactiveArrayTable">
+          <!-- Dynamic array visualization will be inserted here -->
+        </div>
+        <p class="note-footnote">The table updates in real-time as you step through the algorithm. Choose different pivot strategies or click elements in custom mode to see how pivot selection affects partitioning.</p>
       </div>
       <div class="note-section">
         <h3>Pivot improvements &amp; variations</h3>
@@ -147,33 +122,97 @@ export function quickSort(input) {
     `.trim()
   };
 
-  function push(sel = [], compare = [], swap = [], hlLines = [1], seg = null) {
+  function push(sel = [], compare = [], swap = [], hlLines = [1], seg = null, partitionInfo = null) {
     const snapshot = { array: [...arr], sel, compare, swap, hlLines };
     if (seg) snapshot.segment = seg; // {low, high}
+    if (partitionInfo) snapshot.partitionInfo = partitionInfo;
+    snapshot.partitionCalls = [...partitionCalls]; // Include current partition call state
     steps.push(snapshot);
   }
 
   push([], [], [], [1]);
 
+  function choosePivot(low, high, callNumber) {
+    if (customPivots[callNumber] !== undefined) {
+      return Math.max(low, Math.min(high, customPivots[callNumber]));
+    }
+    
+    switch (pivotStrategy) {
+      case 'first':
+        return low;
+      case 'random':
+        return low + Math.floor(Math.random() * (high - low + 1));
+      case 'median-of-three':
+        const mid = Math.floor((low + high) / 2);
+        const vals = [
+          { idx: low, val: arr[low] },
+          { idx: mid, val: arr[mid] },
+          { idx: high, val: arr[high] }
+        ];
+        vals.sort((a, b) => a.val - b.val);
+        return vals[1].idx;
+      case 'last':
+      default:
+        return high;
+    }
+  }
+
   function partition(low, high) {
+    const pivotIdx = choosePivot(low, high, callCounter);
+    
+    // Swap pivot to end if not already there
+    if (pivotIdx !== high) {
+      [arr[pivotIdx], arr[high]] = [arr[high], arr[pivotIdx]];
+      push([pivotIdx, high], [], [pivotIdx, high], [6], { low, high }, 
+           { action: 'pivot-swap', pivotIdx, high });
+    }
+    
     const pivotValue = arr[high];
     let i = low - 1;
-    push([high], [], [], [6, 7], { low, high });
+    
+    // Record this partition call
+    const partitionCall = {
+      call: callCounter + 1,
+      subarray: `[${low}, ${high}]`,
+      pivotIndex: null, // Will be set after partitioning
+      arrayBefore: [...arr],
+      arrayAfter: null, // Will be set after partitioning
+      low,
+      high,
+      pivotValue
+    };
+    
+    push([high], [], [], [6, 7], { low, high }, 
+         { action: 'start-partition', pivotValue, low, high });
+    
     for (let j = low; j < high; j++) {
-      push([low, high, i + 1], [j, high], [], [8, 9, 10], { low, high });
+      push([low, high, i + 1], [j, high], [], [8, 9, 10], { low, high },
+           { action: 'compare', j, pivotValue, comparison: arr[j] <= pivotValue });
       if (arr[j] <= pivotValue) {
         i++;
         const tmp = arr[i];
         arr[i] = arr[j];
         arr[j] = tmp;
-        push([i], [], [i, j], [11, 12], { low, high });
+        push([i], [], [i, j], [11, 12], { low, high },
+             { action: 'swap', i, j });
       }
     }
-    const tmp = arr[i + 1];
-    arr[i + 1] = arr[high];
+    
+    const finalPivotPos = i + 1;
+    const tmp = arr[finalPivotPos];
+    arr[finalPivotPos] = arr[high];
     arr[high] = tmp;
-    push([i + 1], [], [i + 1, high], [13], { low, high });
-    return i + 1;
+    
+    // Complete the partition call record
+    partitionCall.pivotIndex = finalPivotPos;
+    partitionCall.arrayAfter = [...arr];
+    partitionCalls.push(partitionCall);
+    callCounter++;
+    
+    push([finalPivotPos], [], [finalPivotPos, high], [13], { low, high },
+         { action: 'final-swap', pivotPos: finalPivotPos });
+    
+    return finalPivotPos;
   }
 
   function sort(low, high) {
@@ -192,5 +231,5 @@ export function quickSort(input) {
     sort(0, arr.length - 1);
   }
 
-  return { steps, pseudocode, meta };
+  return { steps, pseudocode, meta: { ...meta, partitionCalls, pivotStrategy } };
 }
