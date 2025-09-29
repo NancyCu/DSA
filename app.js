@@ -968,12 +968,13 @@ function renderRecursionTree(partitionCalls) {
       // Only connect nodes that have parentCall === null (direct children of root)
       if (node.parentCall === null) {
         const childPosition = index - (level0Nodes.length - 1) / 2;
-        const isLeft = index === 0;
+        const parentPosition = 0; // Root is always at center
+        const isLeft = childPosition < parentPosition;
         const connectionClass = isLeft ? 'left-connection' : 'right-connection';
         
         treeHTML += `
           <div class="tree-connection ${connectionClass}" 
-               style="--parent-position: 0; --child-position: ${childPosition}">
+               style="--parent-position: ${parentPosition}; --child-position: ${childPosition}">
           </div>
         `;
       }
@@ -1020,18 +1021,19 @@ function renderRecursionTree(partitionCalls) {
           nodesAtLevel.forEach((node, index) => {
             const childNodes = nextLevelNodes.filter(n => n.parentCall === node.call);
             if (childNodes.length > 0) {
-              const nodePosition = index - (nodesAtLevel.length - 1) / 2;
+              const parentPosition = index - (nodesAtLevel.length - 1) / 2;
               
               childNodes.forEach((child, childIndex) => {
                 const childNodeIndex = nextLevelNodes.indexOf(child);
                 const childPosition = childNodeIndex - (nextLevelNodes.length - 1) / 2;
                 
-                const isLeft = childIndex === 0;
+                // Determine connection direction based on relative position
+                const isLeft = childPosition < parentPosition;
                 const connectionClass = isLeft ? 'left-connection' : 'right-connection';
                 
                 treeHTML += `
                   <div class="tree-connection ${connectionClass}" 
-                       style="--parent-position: ${nodePosition}; --child-position: ${childPosition}">
+                       style="--parent-position: ${parentPosition}; --child-position: ${childPosition}">
                   </div>
                 `;
               });
