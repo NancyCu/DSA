@@ -917,6 +917,15 @@ function renderRecursionTree(partitionCalls) {
   // Enhanced tree visualization with shaped nodes and actual elements
   const maxLevel = Math.max(...treeNodes.map(n => n.level));
   let treeHTML = '<div class="recursion-tree-enhanced">';
+  // Helper function to truncate long arrays for better tree visualization
+  const truncateArray = (elements, maxElements = 5) => {
+    if (elements.length <= maxElements) {
+      return elements.join(', ');
+    }
+    const shown = elements.slice(0, maxElements);
+    const remaining = elements.length - maxElements;
+    return `${shown.join(', ')}, ... (+${remaining})`;
+  };
   
   for (let level = 0; level <= maxLevel; level++) {
     const nodesAtLevel = treeNodes.filter(n => n.level === level);
@@ -924,9 +933,9 @@ function renderRecursionTree(partitionCalls) {
       treeHTML += `<div class="tree-level tree-level-${level}">`;
       
       nodesAtLevel.forEach((node, index) => {
-        // Create the elements display for this node
+        // Create the elements display for this node - truncate long arrays for better visualization
         const elementsStr = node.subarrayElements.length > 0 ? 
-          `[${node.subarrayElements.join(', ')}]` : 
+          `[${truncateArray(node.subarrayElements)}]` : 
           node.subarray;
         
         treeHTML += `
@@ -944,7 +953,7 @@ function renderRecursionTree(partitionCalls) {
             treeHTML += '<div class="tree-connections">';
             childNodes.forEach((child, childIndex) => {
               const childElements = child.subarrayElements.length > 0 ? 
-                `[${child.subarrayElements.join(', ')}]` : 
+                `[${truncateArray(child.subarrayElements, 3)}]` : 
                 'empty';
               const isLeft = childIndex === 0;
               treeHTML += `
