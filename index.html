@@ -12,7 +12,7 @@
   </header>
 
   <main class="grid">
-    <section class="panel inputs-panel" aria-label="Inputs">
+    <section class="panel inputs-panel" aria-label="Inputs" style="grid-area: inputs;">
       <div class="inputs-header">
         <div class="panel-title">Inputs</div>
         <div class="inputs-hint" id="inputsHint">Tap to open menu</div>
@@ -76,7 +76,7 @@
         <button id="miniPlay" title="Play/Pause">▶</button>
       </div>
     </section>
-    <section class="panel" id="vizPanel" aria-labelledby="vizTitle">
+    <section class="panel" id="vizPanel" aria-labelledby="vizTitle" style="grid-area: visualization;">
   <div id="vizTitle" class="panel-title" style="margin-bottom:6px">Visualization</div>
   <div id="visual"></div>
       <div id="searchVisual" style="display: none;"></div>
@@ -99,7 +99,7 @@
       </div>
     </section>
 
-    <section class="panel code" aria-labelledby="codeTitle">
+    <section class="panel code" aria-labelledby="codeTitle" style="grid-area: pseudocode;">
       <div id="codeTitle" class="panel-title">Pseudocode</div>
       <pre id="codePane"><code></code></pre>
       <div class="panel-sub">
@@ -138,7 +138,7 @@
       </div>
     </section>
 
-    <section class="panel" aria-label="Complexity">
+    <section class="panel" aria-label="Complexity" style="grid-area: complexity;">
       <div class="panel-title">Complexity</div>
       <table class="complexity">
         <tbody id="complexityBody">
