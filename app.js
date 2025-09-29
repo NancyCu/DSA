@@ -906,28 +906,61 @@ function renderRecursionTree(partitionCalls) {
   const treeNodes = partitionCalls.map(call => ({
     call: call.call,
     subarray: call.subarray,
+    subarrayElements: call.subarrayElements || [],
+    pivotValue: call.pivotValue,
     parentCall: call.parentCall,
     level: call.recursionLevel || 0,
-    leftSubarray: call.leftSubarray,
-    rightSubarray: call.rightSubarray
+    leftElements: call.leftElements || [],
+    rightElements: call.rightElements || []
   }));
   
-  // Simple tree visualization with connected nodes
+  // Enhanced tree visualization with shaped nodes and actual elements
   const maxLevel = Math.max(...treeNodes.map(n => n.level));
-  let treeHTML = '<div class="tree-levels">';
+  let treeHTML = '<div class="recursion-tree-enhanced">';
   
   for (let level = 0; level <= maxLevel; level++) {
     const nodesAtLevel = treeNodes.filter(n => n.level === level);
     if (nodesAtLevel.length > 0) {
-      treeHTML += `<div class="tree-level level-${level}">`;
-      nodesAtLevel.forEach(node => {
+      treeHTML += `<div class="tree-level tree-level-${level}">`;
+      
+      nodesAtLevel.forEach((node, index) => {
+        // Create the elements display for this node
+        const elementsStr = node.subarrayElements.length > 0 ? 
+          `[${node.subarrayElements.join(', ')}]` : 
+          node.subarray;
+        
         treeHTML += `
-          <div class="tree-node" data-call="${node.call}" onclick="highlightTableRow(${node.call})">
-            <div class="node-label">Call ${node.call}</div>
-            <div class="node-subarray">${node.subarray}</div>
-          </div>
+          <div class="tree-node-container">
+            <div class="tree-node-shaped" data-call="${node.call}" onclick="highlightTableRow(${node.call})">
+              <div class="node-elements">${elementsStr}</div>
+              <div class="node-pivot">pivot = ${node.pivotValue}</div>
+            </div>
         `;
+        
+        // Add connection lines to child nodes if they exist
+        if (level < maxLevel) {
+          const childNodes = treeNodes.filter(n => n.level === level + 1 && n.parentCall === node.call);
+          if (childNodes.length > 0) {
+            treeHTML += '<div class="tree-connections">';
+            childNodes.forEach((child, childIndex) => {
+              const childElements = child.subarrayElements.length > 0 ? 
+                `[${child.subarrayElements.join(', ')}]` : 
+                'empty';
+              const isLeft = childIndex === 0;
+              treeHTML += `
+                <div class="tree-connection ${isLeft ? 'left-child' : 'right-child'}">
+                  <div class="connection-line"></div>
+                  <div class="child-label">${isLeft ? 'Left' : 'Right'}: ${childElements}</div>
+                </div>
+              `;
+            });
+            treeHTML += '</div>';
+          }
+        }
+        
+        treeHTML += '</div>';
       });
+      
       treeHTML += '</div>';
     }
   }
