@@ -343,6 +343,45 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
     transform: rotate(30deg);
 }
 
+/* Tree connections between levels */
+.tree-connections-level {
+    position: relative;
+    height: 0;
+    overflow: visible;
+    z-index: 1;
+}
+
+.tree-connection {
+    position: absolute;
+    top: -30px;
+    height: 60px;
+    width: 2px;
+    pointer-events: none;
+    transform: translateX(calc(var(--parent-position, 0) * 120px + 50px));
+}
+
+.tree-connection::before {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 60px;
+    background: linear-gradient(180deg, #3a4d7a 0%, #5a6d9a 100%);
+    transform-origin: top center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.tree-connection.left-connection::before {
+    background: linear-gradient(180deg, #3a4d7a 0%, #7a8ba3 100%);
+    transform: rotate(-30deg);
+    transform-origin: top center;
+}
+
+.tree-connection.right-connection::before {
+    background: linear-gradient(180deg, #7a8ba3 0%, #3a4d7a 100%);
+    transform: rotate(30deg);
+    transform-origin: top center;
+}
+
 /* Enhanced partition table */
 .partition-table{font-size:12px;margin-top:12px}
 .partition-table th{font-size:11px;padding:8px 4px}

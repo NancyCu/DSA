@@ -959,6 +959,29 @@ function renderRecursionTree(partitionCalls) {
     </div>
   `;
   
+  // Add connections from root to level 0 nodes
+  const level0Nodes = treeNodes.filter(n => n.level === 0);
+  if (level0Nodes.length > 0) {
+    treeHTML += '<div class="tree-connections-level">';
+    
+    level0Nodes.forEach((node, index) => {
+      // Only connect nodes that have parentCall === null (direct children of root)
+      if (node.parentCall === null) {
+        const childPosition = index - (level0Nodes.length - 1) / 2;
+        const isLeft = index === 0;
+        const connectionClass = isLeft ? 'left-connection' : 'right-connection';
+        
+        treeHTML += `
+          <div class="tree-connection ${connectionClass}" 
+               style="--parent-position: 0; --child-position: ${childPosition}">
+          </div>
+        `;
+      }
+    });
+    
+    treeHTML += '</div>';
+  }
+  
   // Build tree levels in triangle formation
   for (let level = 0; level <= maxLevel; level++) {
     const nodesAtLevel = treeNodes.filter(n => n.level === level);
@@ -981,27 +1004,43 @@ function renderRecursionTree(partitionCalls) {
               <div class="node-elements">${elementsStr}</div>
               <div class="node-pivot">pivot = ${node.pivotValue}</div>
             </div>
+          </div>
         `;
-        
-        // Add slanted connection lines to child nodes
-        if (level < maxLevel) {
-          const childNodes = treeNodes.filter(n => n.level === level + 1 && n.parentCall === node.call);
-          if (childNodes.length > 0) {
-            childNodes.forEach((child, childIndex) => {
-              const isLeft = childIndex === 0;
-              
-              treeHTML += `
-                <div class="slanted-connection ${isLeft ? 'left-connection' : 'right-connection'}">
-                </div>
-              `;
-            });
-          }
-        }
-        
-        treeHTML += '</div>';
       });
       
       treeHTML += '</div>';
+      
+      // Add connection lines to the next level
+      if (level < maxLevel) {
+        const nextLevelNodes = treeNodes.filter(n => n.level === level + 1);
+        if (nextLevelNodes.length > 0) {
+          treeHTML += '<div class="tree-connections-level">';
+          
+          // Create connections for each node at current level
+          nodesAtLevel.forEach((node, index) => {
+            const childNodes = nextLevelNodes.filter(n => n.parentCall === node.call);
+            if (childNodes.length > 0) {
+              const nodePosition = index - (nodesAtLevel.length - 1) / 2;
+              
+              childNodes.forEach((child, childIndex) => {
+                const childNodeIndex = nextLevelNodes.indexOf(child);
+                const childPosition = childNodeIndex - (nextLevelNodes.length - 1) / 2;
+                
+                const isLeft = childIndex === 0;
+                const connectionClass = isLeft ? 'left-connection' : 'right-connection';
+                
+                treeHTML += `
+                  <div class="tree-connection ${connectionClass}" 
+                       style="--parent-position: ${nodePosition}; --child-position: ${childPosition}">
+                  </div>
+                `;
+              });
+            }
+          });
+          
+          treeHTML += '</div>';
+        }
+      }
     }
   }
   
