@@ -218,6 +218,131 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 .connection-line{width:3px;height:24px;background:linear-gradient(180deg, #3a4d7a 0%, #5a6d9a 100%);margin-bottom:4px;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
 .child-label{font-size:9px;color:#7a8ba3;text-align:center;background:#0f1627;padding:3px 8px;border-radius:6px;border:1px solid #1f2a44;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
 
+/* Triangle tree layout with slanted edges */
+.triangle-tree-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 60px;
+    min-height: 120px;
+    padding: 20px;
+    position: relative;
+}
+
+.triangle-tree-level {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    gap: 40px;
+}
+
+.triangle-level-root {
+    margin-bottom: 20px;
+}
+
+.triangle-node-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateX(calc(var(--node-position, 0) * 120px));
+}
+
+.triangle-node {
+    background: linear-gradient(135deg, #162541 0%, #1a2945 50%, #162541 100%);
+    border: 2px solid #24365e;
+    border-radius: 16px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    max-width: 160px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.triangle-node:hover {
+    background: linear-gradient(135deg, #1f2f4a 0%, #243554 50%, #1f2f4a 100%);
+    border-color: #3a4d7a;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+.root-node .triangle-node {
+    background: linear-gradient(135deg, #2a4a7a 0%, #1a3a6a 50%, #2a4a7a 100%);
+    border-color: #4a6a9a;
+    box-shadow: 0 6px 16px rgba(42,74,122,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    font-weight: bold;
+    min-width: 140px;
+}
+
+.root-node .node-elements {
+    font-size: 13px;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.root-node .node-label {
+    font-size: 9px;
+    color: #a0b0d0;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+.triangle-node .node-elements {
+    font-weight: 600;
+    font-size: 11px;
+    color: #e7eefc;
+    margin-bottom: 3px;
+    font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, monospace;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.2;
+}
+
+.triangle-node .node-pivot {
+    font-size: 9px;
+    color: #9fb0d1;
+    font-style: italic;
+}
+
+.slanted-connection {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform-origin: 0 0;
+    pointer-events: none;
+    z-index: 1;
+    width: 2px;
+    height: 60px;
+    transform: translateX(-1px);
+}
+
+.slanted-connection::before {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 60px;
+    background: linear-gradient(180deg, #3a4d7a 0%, #5a6d9a 100%);
+    transform-origin: 0 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.left-connection::before {
+    background: linear-gradient(180deg, #3a4d7a 0%, #7a8ba3 100%);
+    transform: rotate(-30deg);
+}
+
+.right-connection::before {
+    background: linear-gradient(180deg, #7a8ba3 0%, #3a4d7a 100%);
+    transform: rotate(30deg);
+}
+
 /* Enhanced partition table */
 .partition-table{font-size:12px;margin-top:12px}
 .partition-table th{font-size:11px;padding:8px 4px}
@@ -267,6 +392,40 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.node-subarray{font-size:9px}
 	.tree-level{gap:8px}
 	.table-explanation{font-size:12px;padding:8px}
+	
+	/* Triangle tree mobile adjustments */
+	.triangle-tree-container {
+		gap: 40px;
+		padding: 15px 5px;
+	}
+	
+	.triangle-node-container {
+		transform: translateX(calc(var(--node-position, 0) * 80px));
+	}
+	
+	.triangle-node {
+		min-width: 80px;
+		max-width: 120px;
+		padding: 10px 12px;
+		font-size: 10px;
+	}
+	
+	.triangle-node .node-elements {
+		font-size: 10px;
+		line-height: 1.1;
+	}
+	
+	.triangle-node .node-pivot {
+		font-size: 8px;
+	}
+	
+	.root-node .triangle-node {
+		min-width: 100px;
+	}
+	
+	.root-node .node-elements {
+		font-size: 11px;
+	}
 }
 
 @media (max-width: 640px){
@@ -279,4 +438,42 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.array-element{min-width:44px;padding:10px 6px}
 	.pointer-label{min-width:44px}
 	.bst-buttons input{flex:1 1 140px;min-width:140px;max-width:220px}
+	
+	/* Extra small screen triangle tree adjustments */
+	.triangle-tree-container {
+		gap: 30px;
+		padding: 10px 2px;
+	}
+	
+	.triangle-node-container {
+		transform: translateX(calc(var(--node-position, 0) * 60px));
+	}
+	
+	.triangle-node {
+		min-width: 70px;
+		max-width: 100px;
+		padding: 8px 10px;
+		border-radius: 12px;
+	}
+	
+	.triangle-node .node-elements {
+		font-size: 9px;
+		line-height: 1.0;
+	}
+	
+	.triangle-node .node-pivot {
+		font-size: 7px;
+	}
+	
+	.root-node .triangle-node {
+		min-width: 90px;
+	}
+	
+	.root-node .node-elements {
+		font-size: 10px;
+	}
+	
+	.slanted-connection::before {
+		height: 30px;
+	}
 }

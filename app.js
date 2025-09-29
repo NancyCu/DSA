@@ -918,6 +918,9 @@ function renderRecursionTree(partitionCalls) {
     return '<div class="tree-placeholder">Tree will appear as calls are made</div>';
   }
   
+  // Get the original array from the first partition call
+  const originalArray = partitionCalls.length > 0 ? (partitionCalls[0].arrayBefore ?? []) : [];
+  
   // Build a tree structure from partition calls
   const treeNodes = partitionCalls.map(call => ({
     call: call.call,
@@ -930,9 +933,6 @@ function renderRecursionTree(partitionCalls) {
     rightElements: call.rightElements || []
   }));
   
-  // Enhanced tree visualization with shaped nodes and actual elements
-  const maxLevel = Math.max(...treeNodes.map(n => n.level));
-  let treeHTML = '<div class="recursion-tree-enhanced">';
   // Helper function to truncate long arrays for better tree visualization
   const truncateArray = (elements, maxElements = 5) => {
     if (elements.length <= maxElements) {
@@ -943,43 +943,58 @@ function renderRecursionTree(partitionCalls) {
     return `${shown.join(', ')}, ... (+${remaining})`;
   };
   
+  // Create triangle tree visualization with slanted edges
+  const maxLevel = Math.max(...treeNodes.map(n => n.level));
+  let treeHTML = '<div class="triangle-tree-container">';
+  
+  // Add the original array as root node at the top
+  treeHTML += `
+    <div class="triangle-tree-level triangle-level-root">
+      <div class="triangle-node-container root-node">
+        <div class="triangle-node" data-call="root">
+          <div class="node-elements">[${truncateArray(originalArray)}]</div>
+          <div class="node-label">Original Array</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Build tree levels in triangle formation
   for (let level = 0; level <= maxLevel; level++) {
     const nodesAtLevel = treeNodes.filter(n => n.level === level);
     if (nodesAtLevel.length > 0) {
-      treeHTML += `<div class="tree-level tree-level-${level}">`;
+      treeHTML += `<div class="triangle-tree-level triangle-level-${level}">`;
       
       nodesAtLevel.forEach((node, index) => {
-        // Create the elements display for this node - truncate long arrays for better visualization
+        // Calculate horizontal position for triangle layout
+        const totalNodes = nodesAtLevel.length;
+        const nodePosition = index - (totalNodes - 1) / 2; // Center around 0
+        
+        // Create the elements display for this node
         const elementsStr = node.subarrayElements.length > 0 ? 
           `[${truncateArray(node.subarrayElements)}]` : 
           node.subarray;
         
         treeHTML += `
-          <div class="tree-node-container">
-            <div class="tree-node-shaped" data-call="${node.call}" onclick="highlightTableRow(${node.call})">
+          <div class="triangle-node-container" data-position="${nodePosition}" style="--node-position: ${nodePosition}">
+            <div class="triangle-node" data-call="${node.call}" onclick="highlightTableRow(${node.call})">
               <div class="node-elements">${elementsStr}</div>
               <div class="node-pivot">pivot = ${node.pivotValue}</div>
             </div>
         `;
         
-        // Add connection lines to child nodes if they exist
+        // Add slanted connection lines to child nodes
         if (level < maxLevel) {
           const childNodes = treeNodes.filter(n => n.level === level + 1 && n.parentCall === node.call);
           if (childNodes.length > 0) {
-            treeHTML += '<div class="tree-connections">';
             childNodes.forEach((child, childIndex) => {
-              const childElements = child.subarrayElements.length > 0 ? 
-                `[${truncateArray(child.subarrayElements, 3)}]` : 
-                'empty';
               const isLeft = childIndex === 0;
+              
               treeHTML += `
-                <div class="tree-connection ${isLeft ? 'left-child' : 'right-child'}">
-                  <div class="connection-line"></div>
-                  <div class="child-label">${isLeft ? 'Left' : 'Right'}: ${childElements}</div>
+                <div class="slanted-connection ${isLeft ? 'left-connection' : 'right-connection'}">
                 </div>
               `;
             });
-            treeHTML += '</div>';
           }
         }
         
