@@ -43,6 +43,49 @@ export function quickSort(input) {
             <tr><td>6</td><td>[8, 9]</td><td>9</td><td><code>[2, 10, 27, 30, 40, 45, 70, 80, 85, 90]</code></td></tr>
           </tbody>
         </table>
+        <div class="note-array-legend">
+          <span class="cell-label"><span class="cell-swatch cell-lte">≤ pivot</span> moved left</span>
+          <span class="cell-label"><span class="cell-swatch cell-gt">&gt; pivot</span> stays right</span>
+          <span class="cell-label"><span class="cell-swatch cell-unseen">unprocessed</span> pending scan</span>
+          <span class="cell-label"><span class="cell-swatch cell-pivot">pivot</span> last element</span>
+        </div>
+        <table class="note-table note-array-table">
+          <thead>
+            <tr>
+              <th scope="row">Index</th>
+              <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">During scan (j = 3)</th>
+              <td><span class="cell cell-lte">27</span></td>
+              <td><span class="cell cell-gt">90</span></td>
+              <td><span class="cell cell-lte">2</span></td>
+              <td><span class="cell cell-gt">40</span></td>
+              <td><span class="cell cell-unseen">45</span></td>
+              <td><span class="cell cell-unseen">80</span></td>
+              <td><span class="cell cell-unseen">10</span></td>
+              <td><span class="cell cell-unseen">70</span></td>
+              <td><span class="cell cell-unseen">85</span></td>
+              <td><span class="cell cell-pivot">30</span></td>
+            </tr>
+            <tr>
+              <th scope="row">After partition</th>
+              <td><span class="cell cell-lte">27</span></td>
+              <td><span class="cell cell-lte">2</span></td>
+              <td><span class="cell cell-lte">10</span></td>
+              <td><span class="cell cell-pivot">30</span></td>
+              <td><span class="cell cell-gt">45</span></td>
+              <td><span class="cell cell-gt">80</span></td>
+              <td><span class="cell cell-gt">90</span></td>
+              <td><span class="cell cell-gt">70</span></td>
+              <td><span class="cell cell-gt">85</span></td>
+              <td><span class="cell cell-gt">40</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note-footnote">Trace the scan row from left to right: each comparison either paints the slot green (≤ pivot) or leaves it red (> pivot). Once <code>j</code> reaches the end, the pivot trades places with the first red item, yielding the lower/upper partitions shown underneath.</p>
       </div>
       <div class="note-section">
         <h3>Pivot improvements &amp; variations</h3>

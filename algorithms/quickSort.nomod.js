@@ -24,28 +24,71 @@
       complexity: { best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n²)' },
       space: 'O(log n)',
       notes: `
-        <div class="note-section">
-          <h3>Partition walk-through</h3>
-          <p>
-            Using the Lomuto scheme with the <em>last</em> element as the pivot, every call to
-            <code>partition(A, start, end)</code> moves that pivot into its final sorted position.
-            The example below shows the pivot index returned for <code>[27, 90, 2, 40, 45, 80, 10, 70, 85, 30]</code>.
-          </p>
-          <table class="note-table">
-            <thead>
-              <tr><th>Call</th><th>Subarray</th><th>Pivot index</th><th>Array after partition</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>1</td><td>[0, 9]</td><td>3</td><td><code>[27, 2, 10, 30, 45, 80, 90, 70, 85, 40]</code></td></tr>
-              <tr><td>2</td><td>[0, 2]</td><td>1</td><td><code>[2, 10, 27, 30, 45, 80, 90, 70, 85, 40]</code></td></tr>
-              <tr><td>3</td><td>[4, 9]</td><td>4</td><td><code>[2, 10, 27, 30, 40, 80, 90, 70, 85, 45]</code></td></tr>
-              <tr><td>4</td><td>[5, 9]</td><td>5</td><td><code>[2, 10, 27, 30, 40, 45, 90, 70, 85, 80]</code></td></tr>
-              <tr><td>5</td><td>[6, 9]</td><td>7</td><td><code>[2, 10, 27, 30, 40, 45, 70, 80, 85, 90]</code></td></tr>
-              <tr><td>6</td><td>[8, 9]</td><td>9</td><td><code>[2, 10, 27, 30, 40, 45, 70, 80, 85, 90]</code></td></tr>
-            </tbody>
-          </table>
+      <div class="note-section">
+        <h3>Partition walk-through</h3>
+        <p>
+          Using the Lomuto scheme with the <em>last</em> element as the pivot, every call to
+          <code>partition(A, start, end)</code> moves that pivot into its final sorted position.
+          The example below shows the pivot index returned for <code>[27, 90, 2, 40, 45, 80, 10, 70, 85, 30]</code>.
+        </p>
+        <table class="note-table">
+          <thead>
+            <tr><th>Call</th><th>Subarray</th><th>Pivot index</th><th>Array after partition</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>[0, 9]</td><td>3</td><td><code>[27, 2, 10, 30, 45, 80, 90, 70, 85, 40]</code></td></tr>
+            <tr><td>2</td><td>[0, 2]</td><td>1</td><td><code>[2, 10, 27, 30, 45, 80, 90, 70, 85, 40]</code></td></tr>
+            <tr><td>3</td><td>[4, 9]</td><td>4</td><td><code>[2, 10, 27, 30, 40, 80, 90, 70, 85, 45]</code></td></tr>
+            <tr><td>4</td><td>[5, 9]</td><td>5</td><td><code>[2, 10, 27, 30, 40, 45, 90, 70, 85, 80]</code></td></tr>
+            <tr><td>5</td><td>[6, 9]</td><td>7</td><td><code>[2, 10, 27, 30, 40, 45, 70, 80, 85, 90]</code></td></tr>
+            <tr><td>6</td><td>[8, 9]</td><td>9</td><td><code>[2, 10, 27, 30, 40, 45, 70, 80, 85, 90]</code></td></tr>
+          </tbody>
+        </table>
+        <div class="note-array-legend">
+          <span class="cell-label"><span class="cell-swatch cell-lte">≤ pivot</span> moved left</span>
+          <span class="cell-label"><span class="cell-swatch cell-gt">&gt; pivot</span> stays right</span>
+          <span class="cell-label"><span class="cell-swatch cell-unseen">unprocessed</span> pending scan</span>
+          <span class="cell-label"><span class="cell-swatch cell-pivot">pivot</span> last element</span>
         </div>
-        <div class="note-section">
+        <table class="note-table note-array-table">
+          <thead>
+            <tr>
+              <th scope="row">Index</th>
+              <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">During scan (j = 3)</th>
+              <td><span class="cell cell-lte">27</span></td>
+              <td><span class="cell cell-gt">90</span></td>
+              <td><span class="cell cell-lte">2</span></td>
+              <td><span class="cell cell-gt">40</span></td>
+              <td><span class="cell cell-unseen">45</span></td>
+              <td><span class="cell cell-unseen">80</span></td>
+              <td><span class="cell cell-unseen">10</span></td>
+              <td><span class="cell cell-unseen">70</span></td>
+              <td><span class="cell cell-unseen">85</span></td>
+              <td><span class="cell cell-pivot">30</span></td>
+            </tr>
+            <tr>
+              <th scope="row">After partition</th>
+              <td><span class="cell cell-lte">27</span></td>
+              <td><span class="cell cell-lte">2</span></td>
+              <td><span class="cell cell-lte">10</span></td>
+              <td><span class="cell cell-pivot">30</span></td>
+              <td><span class="cell cell-gt">45</span></td>
+              <td><span class="cell cell-gt">80</span></td>
+              <td><span class="cell cell-gt">90</span></td>
+              <td><span class="cell cell-gt">70</span></td>
+              <td><span class="cell cell-gt">85</span></td>
+              <td><span class="cell cell-gt">40</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note-footnote">Trace the scan row from left to right: each comparison either paints the slot green (≤ pivot) or leaves it red (> pivot). Once <code>j</code> reaches the end, the pivot trades places with the first red item, yielding the lower/upper partitions shown underneath.</p>
+      </div>
+          <div class="note-section">
           <h3>Pivot improvements &amp; variations</h3>
           <ul>
             <li><strong>Median-of-three:</strong> choose the median of <code>A[low]</code>, <code>A[mid]</code>, <code>A[high]</code> and swap it into <code>A[high]</code>. This guards against already sorted inputs that trigger the quadratic worst case.</li>
