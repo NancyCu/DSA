@@ -540,21 +540,41 @@ function renderBSTStep() {
     }
   }
 
+  // Depth-aware node sizing (smaller nodes for deeper trees)
+  const baseNode = isNarrow ? 30 : 36;
+  const minNode = isNarrow ? 24 : 28;
+  const nodeSize = Math.max(minNode, Math.min(baseNode, Math.round(baseNode - Math.max(0, d - 3) * 2)));
+
   for (const [a,b] of edgesFrom(rootForStep)) {
     const pa = idToPos.get(a); const pb = idToPos.get(b);
     if (!pa || !pb) continue;
+    
+    // Create slanted line for triangle effect
+    // Adjust connection points to create angled lines from node centers
+    const nodeRadius = nodeSize / 2;
+    const dx = pb.x - pa.x;
+    const dy = pb.y - pa.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Calculate edge points on the node circles rather than centers
+    const x1 = pa.x + (dx / distance) * nodeRadius;
+    const y1 = pa.y + (dy / distance) * nodeRadius;
+    const x2 = pb.x - (dx / distance) * nodeRadius;
+    const y2 = pb.y - (dy / distance) * nodeRadius;
+    
     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1', pa.x);
-    line.setAttribute('y1', pa.y);
-    line.setAttribute('x2', pb.x);
-    line.setAttribute('y2', pb.y);
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
     line.setAttribute('class', 'edge');
     if (activeA === a && activeB === b) line.classList.add('edge-active');
     svg.appendChild(line);
 
-    // label
+    // label positioned along the slanted line
     const label = document.createElementNS('http://www.w3.org/2000/svg','text');
-    const mx = (pa.x + pb.x) / 2; const my = (pa.y + pb.y) / 2;
+    const mx = (x1 + x2) / 2; 
+    const my = (y1 + y2) / 2;
     label.setAttribute('x', String(mx));
     label.setAttribute('y', String(my - 4));
     label.setAttribute('text-anchor', 'middle');
@@ -575,10 +595,6 @@ function renderBSTStep() {
       bstNodeEls.delete(id);
     }
   }
-  // Depth-aware node sizing (smaller nodes for deeper trees)
-  const baseNode = isNarrow ? 30 : 36;
-  const minNode = isNarrow ? 24 : 28;
-  const nodeSize = Math.max(minNode, Math.min(baseNode, Math.round(baseNode - Math.max(0, d - 3) * 2)));
   for (const n of nodes) {
     let div = bstNodeEls.get(n.id);
     if (!div) {
