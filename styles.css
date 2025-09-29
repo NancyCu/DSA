@@ -129,6 +129,30 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 .complexity td{border-bottom:1px solid #1f2a44;padding:6px 4px;color:#cfe1ff}
 .complexity td:first-child{color:var(--muted)}
 .notes{margin-top:8px;color:#cfe1ff}
+.notes .note-section{margin-top:12px}
+.notes .note-section:first-child{margin-top:0}
+.notes h3{margin:0 0 6px;color:#9fb0d1;font-size:15px;font-weight:600}
+.notes p{margin:4px 0 8px;line-height:1.4}
+.notes ul{margin:6px 0 10px 18px;padding:0}
+.notes li{margin-bottom:4px}
+.notes code{background:#111a2f;color:#e7eefc;padding:0 4px;border-radius:4px;font-size:0.9em}
+.notes pre{background:#0f1627;border:1px solid #1f2a44;border-radius:6px;padding:10px;font-size:13px;line-height:1.5;overflow-x:auto}
+.notes table{width:100%;border-collapse:collapse;margin:6px 0 12px;font-size:13px}
+.notes th,.notes td{border:1px solid #1f2a44;padding:6px;text-align:left;vertical-align:top}
+.notes thead th{background:#101a33;color:#9fb0d1}
+.notes tbody tr:nth-child(even){background:rgba(15,22,39,0.6)}
+.notes .note-array-legend{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 4px;color:var(--muted);font-size:12px}
+.notes .note-array-legend .cell-label{display:flex;align-items:center;gap:6px}
+.notes .note-array-legend .cell-swatch{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:4px 8px;border-radius:6px;font-weight:600}
+.notes .note-array-table th[scope="row"]{background:#0f1627;color:#9fb0d1;font-weight:600;width:88px}
+.notes .note-array-table tbody tr:nth-child(even){background:transparent}
+.notes .note-array-table td{vertical-align:middle;text-align:center}
+.notes .note-array-table .cell{display:inline-flex;align-items:center;justify-content:center;width:100%;padding:6px 0;border-radius:6px;font-weight:700}
+.notes .cell-lte{background:rgba(126,231,135,0.35);color:#0b2612}
+.notes .cell-gt{background:rgba(255,107,107,0.35);color:#2a0606}
+.notes .cell-unseen{background:rgba(159,176,209,0.25);color:#0b1220}
+.notes .cell-pivot{background:rgba(255,209,102,0.6);color:#2a1c00;box-shadow:inset 0 0 0 1px rgba(255,209,102,0.6)}
+.notes .note-footnote{margin:4px 0 0;font-size:12px;color:var(--muted)}
 .foot{color:var(--muted);text-align:center;padding:16px}
 @media (max-width: 980px){
 	.grid{grid-template-columns:1fr}
