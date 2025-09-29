@@ -774,20 +774,10 @@ function setupInteractiveQuickSort() {
 
 function regenerateQuickSortWithStrategy(strategy) {
   const arr = parseArray(arrayInput.value);
-  const options = { 
-    pivotStrategy: strategy,
-    customPivots: strategy === 'custom' ? customPivotSelections : []
-  };
+  currentPivotStrategy = strategy;
   
   stopPlaying();
-  run = quickSort(arr, options);
-  steps = run.steps ?? [];
-  if (!steps.length) {
-    steps = [{ array: [...arr], hlLines: [] }];
-  }
-  idx = Math.max(0, Math.min(idx, steps.length - 1));
-  renderCurrentStep();
-  renderComplexity(run.meta ?? {});
+  buildSteps('quickSort', arr);
 }
 
 function updateCustomPivotVisualization() {
@@ -1386,7 +1376,18 @@ function buildSteps(algoKey, arr, target = null) {
     const algorithms = currentType === 'sorting' ? sortingAlgorithms : searchingAlgorithms;
     const algo = algorithms[algoKey];
     if (!algo) return;
-    run = currentType === 'searching' ? algo(arr, target) : algo(arr);
+    
+    // For quicksort, pass options for pivot strategy
+    if (currentType === 'sorting' && algoKey === 'quickSort') {
+      const options = { 
+        pivotStrategy: currentPivotStrategy,
+        customPivots: currentPivotStrategy === 'custom' ? customPivotSelections : []
+      };
+      run = algo(arr, options);
+    } else {
+      run = currentType === 'searching' ? algo(arr, target) : algo(arr);
+    }
+    
     steps = run.steps ?? [];
     if (!steps.length) {
       steps = [{ array: [...arr], hlLines: [] }];
