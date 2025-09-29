@@ -1145,6 +1145,13 @@ function updateAnalysisSummaryAtEnd() {
 // --- Analysis builders ---
 function fmt(expr){ return String(expr).replace(/\*\*/g,'^'); }
 
+function clipLongTableWithEllipsis(rows, maxRows) {
+  const head = rows.slice(0, 4);
+  const tail = rows.slice(-2);
+  const ellipsis = { level: '…', arg: '…', tc1: '…', nodes: '…', levelTC: '…' };
+  rows.splice(0, rows.length, ...head, ellipsis, ...tail);
+}
+
 function analysisDivideAndConquer(n, algoKey, options = {}) {
   if (!n || n <= 0) return { rows: [] };
   const rows = [];
@@ -1191,10 +1198,7 @@ function analysisDivideAndConquer(n, algoKey, options = {}) {
   // Clip with ellipsis for long tables
   const maxRows = 10;
   if (rows.length > maxRows) {
-    const head = rows.slice(0, 4);
-    const tail = rows.slice(-2);
-    const ellipsis = { level: '…', arg: '…', tc1: '…', nodes: '…', levelTC: '…' };
-    rows.splice(0, rows.length, ...head, ellipsis, ...tail);
+    clipLongTableWithEllipsis(rows, maxRows);
   }
   let totalSym, totalNum;
   if (plusCN) {
