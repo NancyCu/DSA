@@ -62,7 +62,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-ser
 @keyframes nodePulse{0%{transform:translate(-50%, -50%) scale(1);box-shadow:0 0 0 rgba(113,183,255,0)}50%{transform:translate(-50%, -50%) scale(1.08);box-shadow:0 0 12px rgba(113,183,255,0.6)}100%{transform:translate(-50%, -50%) scale(1);box-shadow:0 0 0 rgba(113,183,255,0)}}
 .bst-node.pulse{animation:nodePulse 450ms ease-out}
 svg .level-line{stroke:#24365e;stroke-width:1;stroke-dasharray:4,4}
-svg .edge{stroke:#3a5a9e;stroke-width:2}
+svg .edge{stroke:#3a5a9e;stroke-width:2;stroke-linecap:round}
 svg .edge.edge-active{stroke:#71b7ff;stroke-width:3;filter:drop-shadow(0 0 2px #71b7ff)}
 svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 #visual{display:block;white-space:nowrap;overflow-x:auto}
