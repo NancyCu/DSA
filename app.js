@@ -493,27 +493,6 @@ function renderBSTStep() {
   const nodes = computePositions(rootForStep, w, levelH, { minGap, padding: Math.max(8, Math.min(isNarrow ? 18 : 24, w * 0.03)) });
   const idToPos = new Map(nodes.map(n => [n.id, n]));
 
-  // Auto-zoom to fit if enabled
-  if (bstFitToggle?.checked && nodes.length > 0) {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const n of nodes) { minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x); minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y); }
-    // Expand bounds with a visual margin
-    const margin = 16;
-    const bx = minX - margin;
-    const by = minY - margin;
-    const bw = Math.max(1, (maxX - minX) + margin * 2);
-    const bh = Math.max(1, (maxY - minY) + margin * 2);
-  const scaleBase = Math.min(w / bw, h / bh);
-  // Clamp scaling: smaller upscaling on mobile, larger on desktop
-  const maxScale = isNarrow ? 1.05 : 1.8;
-  const minScale = isNarrow ? 0.35 : 0.45;
-  const scale = Math.max(minScale, Math.min(scaleBase, maxScale));
-    // Center content after scaling
-    const cx = (w - bw * scale) / 2 - bx * scale;
-    const cy = (h - bh * scale) / 2 - by * scale;
-    zoomWrap.style.transform = `translate(${cx}px, ${cy}px) scale(${scale})`;
-  }
-
   // level guide lines
   const depthMax = Math.max(1, d);
   for (let i = 1; i <= Math.min(8, depthMax); i++) {
@@ -544,6 +523,31 @@ function renderBSTStep() {
   const baseNode = isNarrow ? 30 : 36;
   const minNode = isNarrow ? 24 : 28;
   const nodeSize = Math.max(minNode, Math.min(baseNode, Math.round(baseNode - Math.max(0, d - 3) * 2)));
+  const nodeBorder = 2; // Keep in sync with .bst-node border width
+  const nodeRadius = nodeSize / 2 + nodeBorder;
+
+  // Auto-zoom to fit if enabled — include node radius so circles stay inside bounds
+  if (bstFitToggle?.checked && nodes.length > 0) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of nodes) {
+      minX = Math.min(minX, n.x - nodeRadius);
+      maxX = Math.max(maxX, n.x + nodeRadius);
+      minY = Math.min(minY, n.y - nodeRadius);
+      maxY = Math.max(maxY, n.y + nodeRadius);
+    }
+    const margin = 16;
+    const bx = minX - margin;
+    const by = minY - margin;
+    const bw = Math.max(1, (maxX - minX) + margin * 2);
+    const bh = Math.max(1, (maxY - minY) + margin * 2);
+    const scaleBase = Math.min(w / bw, h / bh);
+    const maxScale = isNarrow ? 1.05 : 1.8;
+    const minScale = isNarrow ? 0.35 : 0.45;
+    const scale = Math.max(minScale, Math.min(scaleBase, maxScale));
+    const cx = (w - bw * scale) / 2 - bx * scale;
+    const cy = (h - bh * scale) / 2 - by * scale;
+    zoomWrap.style.transform = `translate(${cx}px, ${cy}px) scale(${scale})`;
+  }
 
   for (const [a,b] of edgesFrom(rootForStep)) {
     const pa = idToPos.get(a); const pb = idToPos.get(b);
@@ -551,10 +555,10 @@ function renderBSTStep() {
     
     // Create slanted line for triangle effect
     // Adjust connection points to create angled lines from node centers
-    const nodeRadius = nodeSize / 2;
     const dx = pb.x - pa.x;
     const dy = pb.y - pa.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
+    if (!distance) continue;
     
     // Calculate edge points on the node circles rather than centers
     const x1 = pa.x + (dx / distance) * nodeRadius;
