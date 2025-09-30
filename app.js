@@ -921,10 +921,37 @@ function renderRecursionTree(partitionCalls) {
   if (partitionCalls.length === 0) {
     return '<div class="tree-placeholder">Tree will appear as calls are made</div>';
   }
-  
+
+  const viewportWidth = treeVisual?.clientWidth || window.innerWidth || 1200;
+  let horizontalSpacing = 120;
+  let verticalSpacing = 130;
+  let parentOverlap = 28;
+  let blockGap = 0;
+
+  if (viewportWidth <= 980) {
+    horizontalSpacing = 90;
+    verticalSpacing = 120;
+    parentOverlap = 24;
+  }
+
+  if (viewportWidth <= 640) {
+    horizontalSpacing = 70;
+    verticalSpacing = 110;
+    parentOverlap = 20;
+  }
+
+  const buildConnectionStyle = (parentPosition, childPosition) => {
+    const dx = (childPosition - parentPosition) * horizontalSpacing;
+    const dy = verticalSpacing + parentOverlap;
+    const angle = Math.atan2(dx, dy) * (180 / Math.PI);
+    const length = Math.sqrt(dx * dx + dy * dy);
+    const xOffset = parentPosition * horizontalSpacing;
+    return `--x-offset: ${xOffset}px; --angle: ${angle.toFixed(2)}deg; --length: ${length.toFixed(2)}px; --start-offset: ${parentOverlap}px;`;
+  };
+
   // Get the original array from the first partition call
   const originalArray = partitionCalls.length > 0 ? (partitionCalls[0].arrayBefore ?? []) : [];
-  
+
   // Build a tree structure from partition calls
   const treeNodes = partitionCalls.map(call => ({
     call: call.call,
@@ -946,10 +973,10 @@ function renderRecursionTree(partitionCalls) {
     const remaining = elements.length - maxElements;
     return `${shown.join(', ')}, ... (+${remaining})`;
   };
-  
+
   // Create triangle tree visualization with slanted edges
   const maxLevel = Math.max(...treeNodes.map(n => n.level));
-  let treeHTML = '<div class="triangle-tree-container">';
+  let treeHTML = `<div class="triangle-tree-container" style="--triangle-horizontal-spacing: ${horizontalSpacing}px; --triangle-vertical-gap: ${verticalSpacing}px; --triangle-parent-overlap: ${parentOverlap}px; --triangle-block-gap: ${blockGap}px;">`;
   
   // Add the original array as root node at the top
   treeHTML += `
@@ -966,8 +993,8 @@ function renderRecursionTree(partitionCalls) {
   // Add connections from root to level 0 nodes
   const level0Nodes = treeNodes.filter(n => n.level === 0);
   if (level0Nodes.length > 0) {
-    treeHTML += '<div class="tree-connections-level">';
-    
+    treeHTML += `<div class="tree-connections-level" style="--level-gap: ${verticalSpacing}px;">`;
+
     level0Nodes.forEach((node, index) => {
       // Only connect nodes that have parentCall === null (direct children of root)
       if (node.parentCall === null) {
@@ -975,10 +1002,10 @@ function renderRecursionTree(partitionCalls) {
         const parentPosition = 0; // Root is always at center
         const isLeft = childPosition < parentPosition;
         const connectionClass = isLeft ? 'left-connection' : 'right-connection';
-        
+
         treeHTML += `
-          <div class="tree-connection ${connectionClass}" 
-               style="--parent-position: ${parentPosition}; --child-position: ${childPosition}">
+          <div class="tree-connection ${connectionClass}"
+               style="${buildConnectionStyle(parentPosition, childPosition)}">
           </div>
         `;
       }
@@ -1019,8 +1046,8 @@ function renderRecursionTree(partitionCalls) {
       if (level < maxLevel) {
         const nextLevelNodes = treeNodes.filter(n => n.level === level + 1);
         if (nextLevelNodes.length > 0) {
-          treeHTML += '<div class="tree-connections-level">';
-          
+          treeHTML += `<div class="tree-connections-level" style="--level-gap: ${verticalSpacing}px;">`;
+
           // Create connections for each node at current level
           nodesAtLevel.forEach((node, index) => {
             const childNodes = nextLevelNodes.filter(n => n.parentCall === node.call);
@@ -1030,14 +1057,14 @@ function renderRecursionTree(partitionCalls) {
               childNodes.forEach((child, childIndex) => {
                 const childNodeIndex = nextLevelNodes.indexOf(child);
                 const childPosition = childNodeIndex - (nextLevelNodes.length - 1) / 2;
-                
+
                 // Determine connection direction based on relative position
                 const isLeft = childPosition < parentPosition;
                 const connectionClass = isLeft ? 'left-connection' : 'right-connection';
-                
+
                 treeHTML += `
-                  <div class="tree-connection ${connectionClass}" 
-                       style="--parent-position: ${parentPosition}; --child-position: ${childPosition}">
+                  <div class="tree-connection ${connectionClass}"
+                       style="${buildConnectionStyle(parentPosition, childPosition)}">
                   </div>
                 `;
               });

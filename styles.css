@@ -220,10 +220,14 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 
 /* Triangle tree layout with slanted edges */
 .triangle-tree-container {
+    --triangle-horizontal-spacing: 120px;
+    --triangle-vertical-gap: 130px;
+    --triangle-parent-overlap: 28px;
+    --triangle-block-gap: 0px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 60px;
+    gap: var(--triangle-block-gap);
     min-height: 120px;
     padding: 20px;
     position: relative;
@@ -246,7 +250,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
     display: flex;
     flex-direction: column;
     align-items: center;
-    transform: translateX(calc(var(--node-position, 0) * 120px));
+    transform: translateX(calc(var(--node-position, 0) * var(--triangle-horizontal-spacing)));
 }
 
 .triangle-node {
@@ -346,7 +350,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 /* Tree connections between levels */
 .tree-connections-level {
     position: relative;
-    height: 0;
+    height: var(--level-gap, var(--triangle-vertical-gap));
     overflow: visible;
     z-index: 1;
     width: 100%;
@@ -354,49 +358,40 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 
 .tree-connection {
     position: absolute;
-    top: -15px;
-    height: 45px;
+    top: 0;
     width: 2px;
     pointer-events: none;
-    left: calc(50% + var(--parent-position, 0) * 120px);
+    left: 50%;
+    transform: translateX(calc(var(--x-offset, 0px) - 1.5px));
 }
 
 .tree-connection::before {
     content: '';
     position: absolute;
     width: 3px;
-    height: 45px;
+    height: var(--length, 100px);
     background: linear-gradient(180deg, #6a7daa 0%, #8a9dca 100%);
     transform-origin: top center;
+    transform: rotate(var(--angle, 0deg));
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     opacity: 1;
     border-radius: 1px;
+    top: calc(var(--start-offset, 0px) * -1);
+    left: 0;
 }
 
 .tree-connection.left-connection {
-    transform: translateX(calc((var(--child-position, 0) - var(--parent-position, 0)) * 60px));
 }
 
 .tree-connection.left-connection::before {
     background: linear-gradient(145deg, #6a7daa 0%, #8a9dca 100%);
-    transform: rotate(calc((var(--child-position, 0) - var(--parent-position, 0)) * 15deg));
-    transform-origin: top center;
-    opacity: 1;
-    width: 3px;
-    border-radius: 1px;
 }
 
 .tree-connection.right-connection {
-    transform: translateX(calc((var(--child-position, 0) - var(--parent-position, 0)) * 60px));
 }
 
 .tree-connection.right-connection::before {
     background: linear-gradient(215deg, #8a9dca 0%, #6a7daa 100%);
-    transform: rotate(calc((var(--child-position, 0) - var(--parent-position, 0)) * 15deg));
-    transform-origin: top center;
-    opacity: 1;
-    width: 3px;
-    border-radius: 1px;
 }
 
 /* Enhanced partition table */
@@ -450,32 +445,15 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.table-explanation{font-size:12px;padding:8px}
 	
 	/* Triangle tree mobile adjustments */
-	.triangle-tree-container {
-		gap: 40px;
-		padding: 15px 5px;
-	}
-	
-	.triangle-node-container {
-		transform: translateX(calc(var(--node-position, 0) * 80px));
-	}
-	
-	.tree-connection {
-		left: calc(50% + var(--parent-position, 0) * 80px);
-	}
-	
-	.tree-connection.left-connection {
-		transform: translateX(calc((var(--child-position, 0) - var(--parent-position, 0)) * 40px));
-	}
-	
-	.tree-connection.right-connection {
-		transform: translateX(calc((var(--child-position, 0) - var(--parent-position, 0)) * 40px));
-	}
-	
-	.triangle-node {
-		min-width: 80px;
-		max-width: 120px;
-		padding: 10px 12px;
-		font-size: 10px;
+        .triangle-tree-container {
+                padding: 15px 5px;
+        }
+
+        .triangle-node {
+                min-width: 80px;
+                max-width: 120px;
+                padding: 10px 12px;
+                font-size: 10px;
 	}
 	
 	.triangle-node .node-elements {
@@ -508,14 +486,9 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.bst-buttons input{flex:1 1 140px;min-width:140px;max-width:220px}
 	
 	/* Extra small screen triangle tree adjustments */
-	.triangle-tree-container {
-		gap: 30px;
-		padding: 10px 2px;
-	}
-	
-	.triangle-node-container {
-		transform: translateX(calc(var(--node-position, 0) * 60px));
-	}
+        .triangle-tree-container {
+                padding: 10px 2px;
+        }
 	
 	.triangle-node {
 		min-width: 70px;
