@@ -242,7 +242,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 }
 
 .triangle-level-root {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .triangle-node-container {
@@ -369,7 +369,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
     content: '';
     position: absolute;
     width: 3px;
-    height: var(--length, 100px);
+    height: calc(var(--length, 100px) + var(--start-offset, 0px));
     background: linear-gradient(180deg, #6a7daa 0%, #8a9dca 100%);
     transform-origin: top center;
     transform: rotate(var(--angle, 0deg));
@@ -378,6 +378,14 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
     border-radius: 1px;
     top: calc(var(--start-offset, 0px) * -1);
     left: 0;
+}
+
+.triangle-tree-level + .tree-connections-level {
+    margin-top: -18px;
+}
+
+.tree-connections-level {
+    margin-bottom: -18px;
 }
 
 .tree-connection.left-connection {
@@ -395,12 +403,13 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 }
 
 /* Enhanced partition table */
-.partition-table{font-size:12px;margin-top:12px}
+.partition-table{font-size:12px;margin-top:12px;width:100%;border-collapse:collapse}
 .partition-table th{font-size:11px;padding:8px 4px}
-.partition-table td{padding:6px 4px}
+.partition-table td{padding:6px 4px;vertical-align:top}
 .partition-call-row{transition:background-color 0.3s ease}
 .partition-call-row.highlighted{background:rgba(113,183,255,0.2)!important;border:1px solid rgba(113,183,255,0.5)}
-.subarray-cell{font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;color:var(--muted)}
+.partition-table code{white-space:normal;word-break:break-word}
+.subarray-cell{font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-word}
 
 /* Desktop enhancements */
 @media (min-width: 981px){
@@ -429,12 +438,20 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.controls .speed{font-size:12px}
 	#codePane{max-height:240px}
 	
-	/* Mobile partition table optimizations */
-	.partition-table{font-size:11px;overflow-x:auto;display:block;white-space:nowrap}
-	.partition-table thead,.partition-table tbody,.partition-table tr{display:block}
-	.partition-table th,.partition-table td{display:inline-block;padding:4px 6px;vertical-align:top;border-right:1px solid #1f2a44;min-width:60px;word-break:break-word;white-space:normal}
-	.partition-table th:last-child,.partition-table td:last-child{border-right:none;min-width:100px}
-	.partition-table th{background:#101a33;font-weight:600;font-size:10px}
+        /* Mobile partition table optimizations */
+        .partition-table{display:block;font-size:11px;border-collapse:separate;border-spacing:0;overflow:visible}
+        .partition-table thead{display:none}
+        .partition-table tbody{display:flex;flex-direction:column;gap:12px;width:100%}
+        .partition-table tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;background:rgba(16,26,51,0.85);border:1px solid #1f2a44;border-radius:12px;padding:10px}
+        .partition-table td{display:flex;flex-direction:column;padding:0;border:none;min-width:0;white-space:normal}
+        .partition-table td::before{content:attr(data-label);font-size:10px;font-weight:600;color:#9fb0d1;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.03em}
+        .partition-table td[data-label="Array after partition"],
+        .partition-table td[data-label="Right Subarray"],
+        .partition-table td[data-label="Left Subarray"]{grid-column:1 / -1}
+        .partition-table td code{display:block}
+        .partition-call-row.highlighted{box-shadow:0 0 0 1px rgba(113,183,255,0.6)}
+        .empty-partition-message{justify-content:center;align-items:center;text-align:center}
+        .empty-partition-message::before{content:''}
 	
 	/* Mobile tree adjustments */
 	.recursion-tree-container{padding:8px;margin:8px 0}
@@ -454,7 +471,10 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
                 max-width: 120px;
                 padding: 10px 12px;
                 font-size: 10px;
-	}
+        }
+
+        .triangle-tree-level + .tree-connections-level{margin-top:-14px}
+        .tree-connections-level{margin-bottom:-14px}
 	
 	.triangle-node .node-elements {
 		font-size: 10px;
@@ -485,22 +505,29 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 	.pointer-label{min-width:44px}
 	.bst-buttons input{flex:1 1 140px;min-width:140px;max-width:220px}
 	
-	/* Extra small screen triangle tree adjustments */
+        /* Extra small screen triangle tree adjustments */
         .triangle-tree-container {
                 padding: 10px 2px;
         }
-	
-	.triangle-node {
-		min-width: 70px;
-		max-width: 100px;
-		padding: 8px 10px;
-		border-radius: 12px;
-	}
-	
-	.triangle-node .node-elements {
-		font-size: 9px;
-		line-height: 1.0;
-	}
+
+        .triangle-node {
+                min-width: 70px;
+                max-width: 100px;
+                padding: 8px 10px;
+                border-radius: 12px;
+        }
+
+        .triangle-tree-level + .tree-connections-level{margin-top:-12px}
+        .tree-connections-level{margin-bottom:-12px}
+
+        .partition-table tr{grid-template-columns:1fr}
+        .partition-table td{padding-bottom:6px}
+        .partition-table td:last-child{padding-bottom:0}
+
+        .triangle-node .node-elements {
+                font-size: 9px;
+                line-height: 1.0;
+        }
 	
 	.triangle-node .node-pivot {
 		font-size: 7px;

@@ -871,7 +871,7 @@ function renderPartitionCallsTable(step) {
           </tr>
         </thead>
         <tbody>
-          <tr><td colspan="7" style="text-align: center; color: #9fb0d1;">No partition calls yet - step through the algorithm to see them</td></tr>
+          <tr><td colspan="7" data-label="Status" class="empty-partition-message" style="text-align: center; color: #9fb0d1;">No partition calls yet - step through the algorithm to see them</td></tr>
         </tbody>
       </table>
     `;
@@ -882,16 +882,16 @@ function renderPartitionCallsTable(step) {
     const pivotIndex = call.pivotIndex !== null ? call.pivotIndex : '—';
     const leftSubarray = call.leftSubarray || '—';
     const rightSubarray = call.rightSubarray || '—';
-    
+
     return `
       <tr id="call-row-${call.call}" class="partition-call-row" data-call="${call.call}">
-        <td>${call.call}</td>
-        <td>${call.subarray}</td>
-        <td>${call.pivotValue}</td>
-        <td>${pivotIndex}</td>
-        <td class="subarray-cell">${leftSubarray}</td>
-        <td class="subarray-cell">${rightSubarray}</td>
-        <td><code>${arrayStr}</code></td>
+        <td data-label="Call">${call.call}</td>
+        <td data-label="Subarray">${call.subarray}</td>
+        <td data-label="Pivot Value">${call.pivotValue}</td>
+        <td data-label="Pivot Index">${pivotIndex}</td>
+        <td class="subarray-cell" data-label="Left Subarray">${leftSubarray}</td>
+        <td class="subarray-cell" data-label="Right Subarray">${rightSubarray}</td>
+        <td data-label="Array after partition"><code>${arrayStr}</code></td>
       </tr>
     `;
   }).join('');
@@ -925,19 +925,19 @@ function renderRecursionTree(partitionCalls) {
   const viewportWidth = treeVisual?.clientWidth || window.innerWidth || 1200;
   let horizontalSpacing = 120;
   let verticalSpacing = 130;
-  let parentOverlap = 28;
+  let parentOverlap = 44;
   let blockGap = 0;
 
   if (viewportWidth <= 980) {
     horizontalSpacing = 90;
     verticalSpacing = 120;
-    parentOverlap = 24;
+    parentOverlap = 36;
   }
 
   if (viewportWidth <= 640) {
     horizontalSpacing = 70;
     verticalSpacing = 110;
-    parentOverlap = 20;
+    parentOverlap = 32;
   }
 
   const buildConnectionStyle = (parentPosition, childPosition) => {
