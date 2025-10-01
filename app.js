@@ -1058,7 +1058,7 @@ function layoutRecursionTreeConnections(container) {
 
   nodeElements.forEach(node => {
     const parentId = node.dataset.parent;
-    if (!parentId || node.dataset.call === 'root') return;
+    if (!parentId || parentId === 'root') return;
 
     const parentNode = parentId === 'root' ? rootNode : nodeMap.get(parentId);
     if (!parentNode) return;
