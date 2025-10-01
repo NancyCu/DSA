@@ -233,16 +233,41 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
     position: relative;
 }
 
+.triangle-tree-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 0;
+}
+
+.triangle-tree-lines .tree-connection-line {
+    stroke: #7b8fc0;
+    stroke-width: 2.4px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    opacity: 0.9;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+}
+
 .triangle-tree-level {
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
     gap: 40px;
+    z-index: 1;
+}
+
+.triangle-tree-level:not(:first-of-type) {
+    margin-top: var(--triangle-vertical-gap);
 }
 
 .triangle-level-root {
-    margin-bottom: 12px;
+    margin-bottom: 0;
 }
 
 .triangle-node-container {
@@ -251,6 +276,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
     flex-direction: column;
     align-items: center;
     transform: translateX(calc(var(--node-position, 0) * var(--triangle-horizontal-spacing)));
+    z-index: 1;
 }
 
 .triangle-node {
@@ -315,93 +341,6 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
     font-style: italic;
 }
 
-.slanted-connection {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform-origin: 0 0;
-    pointer-events: none;
-    z-index: 1;
-    width: 2px;
-    height: 60px;
-    transform: translateX(-1px);
-}
-
-.slanted-connection::before {
-    content: '';
-    position: absolute;
-    width: 2px;
-    height: 60px;
-    background: linear-gradient(180deg, #3a4d7a 0%, #5a6d9a 100%);
-    transform-origin: 0 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-
-.left-connection::before {
-    background: linear-gradient(180deg, #3a4d7a 0%, #7a8ba3 100%);
-    transform: rotate(-30deg);
-}
-
-.right-connection::before {
-    background: linear-gradient(180deg, #7a8ba3 0%, #3a4d7a 100%);
-    transform: rotate(30deg);
-}
-
-/* Tree connections between levels */
-.tree-connections-level {
-    position: relative;
-    height: var(--level-gap, var(--triangle-vertical-gap));
-    overflow: visible;
-    z-index: 1;
-    width: 100%;
-}
-
-.tree-connection {
-    position: absolute;
-    top: 0;
-    width: 2px;
-    pointer-events: none;
-    left: 50%;
-    transform: translateX(calc(var(--x-offset, 0px) - 1.5px));
-}
-
-.tree-connection::before {
-    content: '';
-    position: absolute;
-    width: 3px;
-    height: calc(var(--length, 100px) + var(--start-offset, 0px));
-    background: linear-gradient(180deg, #6a7daa 0%, #8a9dca 100%);
-    transform-origin: top center;
-    transform: rotate(var(--angle, 0deg));
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    opacity: 1;
-    border-radius: 1px;
-    top: calc(var(--start-offset, 0px) * -1);
-    left: 0;
-}
-
-.triangle-tree-level + .tree-connections-level {
-    margin-top: -18px;
-}
-
-.tree-connections-level {
-    margin-bottom: -18px;
-}
-
-.tree-connection.left-connection {
-}
-
-.tree-connection.left-connection::before {
-    background: linear-gradient(145deg, #6a7daa 0%, #8a9dca 100%);
-}
-
-.tree-connection.right-connection {
-}
-
-.tree-connection.right-connection::before {
-    background: linear-gradient(215deg, #8a9dca 0%, #6a7daa 100%);
-}
-
 /* Enhanced partition table */
 .partition-table{font-size:12px;margin-top:12px;width:100%;border-collapse:collapse}
 .partition-table th{font-size:11px;padding:8px 4px}
@@ -441,10 +380,10 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
         /* Mobile partition table optimizations */
         .partition-table{display:block;font-size:11px;border-collapse:separate;border-spacing:0;overflow:visible}
         .partition-table thead{display:none}
-        .partition-table tbody{display:flex;flex-direction:column;gap:12px;width:100%}
-        .partition-table tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;background:rgba(16,26,51,0.85);border:1px solid #1f2a44;border-radius:12px;padding:10px}
-        .partition-table td{display:flex;flex-direction:column;padding:0;border:none;min-width:0;white-space:normal}
-        .partition-table td::before{content:attr(data-label);font-size:10px;font-weight:600;color:#9fb0d1;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.03em}
+        .partition-table tbody{display:flex;flex-direction:column;gap:8px;width:100%;max-height:62vh;overflow-y:auto;padding-right:4px;scrollbar-gutter:stable}
+        .partition-table tr{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));grid-auto-flow:row;gap:4px 8px;background:rgba(16,26,51,0.9);border:1px solid #1f2a44;border-radius:12px;padding:8px 9px}
+        .partition-table td{display:flex;flex-direction:column;padding:0;border:none;min-width:0;white-space:normal;font-size:10px;line-height:1.25}
+        .partition-table td::before{content:attr(data-label);font-size:9px;font-weight:600;color:#9fb0d1;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.03em}
         .partition-table td.partition-span { grid-column: 1 / -1; }
         .partition-table td code{display:block}
         .partition-call-row.highlighted{box-shadow:0 0 0 1px rgba(113,183,255,0.6)}
@@ -470,13 +409,10 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
                 font-size: 10px;
         }
 
-        .triangle-tree-level + .tree-connections-level{margin-top:-14px}
-        .tree-connections-level{margin-bottom:-14px}
-	
-	.triangle-node .node-elements {
-		font-size: 10px;
-		line-height: 1.1;
-	}
+        .triangle-node .node-elements {
+                font-size: 10px;
+                line-height: 1.1;
+        }
 	
 	.triangle-node .node-pivot {
 		font-size: 8px;
@@ -514,10 +450,8 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
                 border-radius: 12px;
         }
 
-        .triangle-tree-level + .tree-connections-level{margin-top:-12px}
-        .tree-connections-level{margin-bottom:-12px}
-
-        .partition-table tr{grid-template-columns:1fr}
+        .partition-table tbody{max-height:66vh}
+        .partition-table tr{grid-template-columns:repeat(2,minmax(0,1fr))}
         .partition-table td{padding-bottom:6px}
         .partition-table td:last-child{padding-bottom:0}
 
@@ -538,7 +472,4 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
 		font-size: 10px;
 	}
 	
-	.slanted-connection::before {
-		height: 30px;
-	}
 }

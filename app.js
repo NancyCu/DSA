@@ -830,6 +830,10 @@ function renderInteractiveQuickSortTables() {
   
   if (partitionTable) {
     partitionTable.innerHTML = renderPartitionCallsTable(step);
+    requestAnimationFrame(() => {
+      const treeContainer = partitionTable.querySelector('.triangle-tree-container');
+      if (treeContainer) layoutRecursionTreeConnections(treeContainer);
+    });
   }
   
   if (arrayTable) {
@@ -940,15 +944,6 @@ function renderRecursionTree(partitionCalls) {
     parentOverlap = 32;
   }
 
-  const buildConnectionStyle = (parentPosition, childPosition) => {
-    const dx = (childPosition - parentPosition) * horizontalSpacing;
-    const dy = verticalSpacing + parentOverlap;
-    const angle = Math.atan2(dx, dy) * (180 / Math.PI);
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const xOffset = parentPosition * horizontalSpacing;
-    return `--x-offset: ${xOffset}px; --angle: ${angle.toFixed(2)}deg; --length: ${length.toFixed(2)}px; --start-offset: ${parentOverlap}px;`;
-  };
-
   // Get the original array from the first partition call
   const originalArray = partitionCalls.length > 0 ? (partitionCalls[0].arrayBefore ?? []) : [];
 
@@ -963,7 +958,7 @@ function renderRecursionTree(partitionCalls) {
     leftElements: call.leftElements || [],
     rightElements: call.rightElements || []
   }));
-  
+
   // Helper function to truncate long arrays for better tree visualization
   const truncateArray = (elements, maxElements = 5) => {
     if (elements.length <= maxElements) {
@@ -974,10 +969,11 @@ function renderRecursionTree(partitionCalls) {
     return `${shown.join(', ')}, ... (+${remaining})`;
   };
 
-  // Create triangle tree visualization with slanted edges
+  // Create triangle tree visualization
   const maxLevel = Math.max(...treeNodes.map(n => n.level));
   let treeHTML = `<div class="triangle-tree-container" style="--triangle-horizontal-spacing: ${horizontalSpacing}px; --triangle-vertical-gap: ${verticalSpacing}px; --triangle-parent-overlap: ${parentOverlap}px; --triangle-block-gap: ${blockGap}px;">`;
-  
+  treeHTML += '<svg class="triangle-tree-lines" aria-hidden="true"></svg>';
+
   // Add the original array as root node at the top
   treeHTML += `
     <div class="triangle-tree-level triangle-level-root">
@@ -989,98 +985,134 @@ function renderRecursionTree(partitionCalls) {
       </div>
     </div>
   `;
-  
-  // Add connections from root to level 0 nodes
-  const level0Nodes = treeNodes.filter(n => n.level === 0);
-  if (level0Nodes.length > 0) {
-    treeHTML += `<div class="tree-connections-level" style="--level-gap: ${verticalSpacing}px;">`;
 
-    level0Nodes.forEach((node, index) => {
-      // Only connect nodes that have parentCall === null (direct children of root)
-      if (node.parentCall === null) {
-        const childPosition = index - (level0Nodes.length - 1) / 2;
-        const parentPosition = 0; // Root is always at center
-        const isLeft = childPosition < parentPosition;
-        const connectionClass = isLeft ? 'left-connection' : 'right-connection';
-
-        treeHTML += `
-          <div class="tree-connection ${connectionClass}"
-               style="${buildConnectionStyle(parentPosition, childPosition)}">
-          </div>
-        `;
-      }
-    });
-    
-    treeHTML += '</div>';
-  }
-  
   // Build tree levels in triangle formation
   for (let level = 0; level <= maxLevel; level++) {
     const nodesAtLevel = treeNodes.filter(n => n.level === level);
     if (nodesAtLevel.length > 0) {
       treeHTML += `<div class="triangle-tree-level triangle-level-${level}">`;
-      
+
       nodesAtLevel.forEach((node, index) => {
         // Calculate horizontal position for triangle layout
         const totalNodes = nodesAtLevel.length;
         const nodePosition = index - (totalNodes - 1) / 2; // Center around 0
-        
+
         // Create the elements display for this node
-        const elementsStr = node.subarrayElements.length > 0 ? 
-          `[${truncateArray(node.subarrayElements)}]` : 
+        const elementsStr = node.subarrayElements.length > 0 ?
+          `[${truncateArray(node.subarrayElements)}]` :
           node.subarray;
-        
+
+        const parentCall = node.parentCall == null ? 'root' : node.parentCall;
+
         treeHTML += `
           <div class="triangle-node-container" data-position="${nodePosition}" style="--node-position: ${nodePosition}">
-            <div class="triangle-node" data-call="${node.call}" onclick="highlightTableRow(${node.call})">
+            <div class="triangle-node" data-call="${node.call}" data-parent="${parentCall}" data-level="${node.level}" onclick="highlightTableRow(${node.call})">
               <div class="node-elements">${elementsStr}</div>
               <div class="node-pivot">pivot = ${node.pivotValue}</div>
             </div>
           </div>
         `;
       });
-      
+
       treeHTML += '</div>';
-      
-      // Add connection lines to the next level
-      if (level < maxLevel) {
-        const nextLevelNodes = treeNodes.filter(n => n.level === level + 1);
-        if (nextLevelNodes.length > 0) {
-          treeHTML += `<div class="tree-connections-level" style="--level-gap: ${verticalSpacing}px;">`;
-
-          // Create connections for each node at current level
-          nodesAtLevel.forEach((node, index) => {
-            const childNodes = nextLevelNodes.filter(n => n.parentCall === node.call);
-            if (childNodes.length > 0) {
-              const parentPosition = index - (nodesAtLevel.length - 1) / 2;
-              
-              childNodes.forEach((child, childIndex) => {
-                const childNodeIndex = nextLevelNodes.indexOf(child);
-                const childPosition = childNodeIndex - (nextLevelNodes.length - 1) / 2;
-
-                // Determine connection direction based on relative position
-                const isLeft = childPosition < parentPosition;
-                const connectionClass = isLeft ? 'left-connection' : 'right-connection';
-
-                treeHTML += `
-                  <div class="tree-connection ${connectionClass}"
-                       style="${buildConnectionStyle(parentPosition, childPosition)}">
-                  </div>
-                `;
-              });
-            }
-          });
-          
-          treeHTML += '</div>';
-        }
-      }
     }
   }
-  
+
   treeHTML += '</div>';
+
   return treeHTML;
 }
 
+function layoutRecursionTreeConnections(container) {
+  if (!container || typeof container.querySelector !== 'function') return;
+
+  let svg = container.querySelector('.triangle-tree-lines');
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('triangle-tree-lines');
+    container.insertBefore(svg, container.firstChild);
+  }
+
+  const rootNode = container.querySelector('.root-node .triangle-node');
+  const nodeElements = Array.from(container.querySelectorAll('.triangle-tree-level .triangle-node'));
+  if (!rootNode && nodeElements.length === 0) {
+    svg.innerHTML = '';
+    return;
+  }
+
+  let gapAdjusted = false;
+  const sampleNode = nodeElements[0] || rootNode;
+  if (sampleNode) {
+    const nodeHeight = sampleNode.getBoundingClientRect().height;
+    if (Number.isFinite(nodeHeight) && nodeHeight > 0) {
+      const computedStyles = getComputedStyle(container);
+      const currentGap = parseFloat(computedStyles.getPropertyValue('--triangle-vertical-gap'));
+      if (!Number.isFinite(currentGap) || currentGap + 0.5 < nodeHeight) {
+        container.style.setProperty('--triangle-vertical-gap', `${Math.ceil(nodeHeight)}px`);
+        gapAdjusted = true;
+      }
+    }
+  }
+
+  if (gapAdjusted) {
+    requestAnimationFrame(() => layoutRecursionTreeConnections(container));
+    return;
+  }
+
+  const containerRect = container.getBoundingClientRect();
+  const width = container.scrollWidth;
+  const height = container.scrollHeight;
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.style.width = `${width}px`;
+  svg.style.height = `${height}px`;
+  while (svg.firstChild) svg.firstChild.remove();
+
+  const nodeMap = new Map();
+  nodeElements.forEach(node => {
+    const id = node.dataset.call;
+    if (id) nodeMap.set(id, node);
+  });
+
+  nodeElements.forEach(node => {
+    const parentId = node.dataset.parent;
+    if (!parentId || node.dataset.call === 'root') return;
+
+    const parentNode = parentId === 'root' ? rootNode : nodeMap.get(parentId);
+    if (!parentNode) return;
+
+    const parentRect = parentNode.getBoundingClientRect();
+    const childRect = node.getBoundingClientRect();
+
+    const x1 = parentRect.left + parentRect.width / 2 - containerRect.left;
+    const y1 = parentRect.bottom - containerRect.top;
+    const x2 = childRect.left + childRect.width / 2 - containerRect.left;
+    const y2 = childRect.top - containerRect.top;
+
+    const verticalSpan = Math.max(0, y2 - y1);
+    const verticalOffset = Math.max(18, verticalSpan * 0.35);
+    const c1y = Math.min(y1 + verticalOffset, y1 + verticalSpan / 2);
+    const c2yBase = Math.max(y2 - verticalOffset, y1 + verticalSpan / 2);
+    const c2y = Number.isFinite(c2yBase) ? c2yBase : y2;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M ${x1} ${y1} C ${x1} ${c1y}, ${x2} ${c2y}, ${x2} ${y2}`);
+    path.setAttribute('class', 'tree-connection-line');
+    path.setAttribute('vector-effect', 'non-scaling-stroke');
+    svg.appendChild(path);
+  });
+}
+
+let recursionTreeResizeRaf = null;
+window.addEventListener('resize', () => {
+  if (recursionTreeResizeRaf) cancelAnimationFrame(recursionTreeResizeRaf);
+  recursionTreeResizeRaf = requestAnimationFrame(() => {
+    document.querySelectorAll('.triangle-tree-container').forEach(container => {
+      layoutRecursionTreeConnections(container);
+    });
+  });
+});
 function highlightTableRow(callNumber) {
   // Remove previous highlights
   document.querySelectorAll('.partition-call-row').forEach(row => {
