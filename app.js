@@ -832,7 +832,13 @@ function renderInteractiveQuickSortTables() {
     partitionTable.innerHTML = renderPartitionCallsTable(step);
     requestAnimationFrame(() => {
       const treeContainer = partitionTable.querySelector('.triangle-tree-container');
-      if (treeContainer) layoutRecursionTreeConnections(treeContainer);
+      if (treeContainer) {
+        const currentSignature = getTreeStructureSignature(treeContainer);
+        if (currentSignature !== previousTreeStructureSignature) {
+          layoutRecursionTreeConnections(treeContainer);
+          previousTreeStructureSignature = currentSignature;
+        }
+      }
     });
   }
   
