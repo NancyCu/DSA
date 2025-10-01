@@ -449,7 +449,6 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
         .partition-table td code{display:block}
         .partition-call-row.highlighted{box-shadow:0 0 0 1px rgba(113,183,255,0.6)}
         .empty-partition-message{justify-content:center;align-items:center;text-align:center}
-        .empty-partition-message::before{content:''}
 	
 	/* Mobile tree adjustments */
 	.recursion-tree-container{padding:8px;margin:8px 0}
