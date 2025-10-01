@@ -445,9 +445,7 @@ svg .edge-label{fill:#9fb0d1;font-size:11px;font-weight:600}
         .partition-table tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;background:rgba(16,26,51,0.85);border:1px solid #1f2a44;border-radius:12px;padding:10px}
         .partition-table td{display:flex;flex-direction:column;padding:0;border:none;min-width:0;white-space:normal}
         .partition-table td::before{content:attr(data-label);font-size:10px;font-weight:600;color:#9fb0d1;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.03em}
-        .partition-table td[data-label="Array after partition"],
-        .partition-table td[data-label="Right Subarray"],
-        .partition-table td[data-label="Left Subarray"]{grid-column:1 / -1}
+        .partition-table td.partition-span { grid-column: 1 / -1; }
         .partition-table td code{display:block}
         .partition-call-row.highlighted{box-shadow:0 0 0 1px rgba(113,183,255,0.6)}
         .empty-partition-message{justify-content:center;align-items:center;text-align:center}
