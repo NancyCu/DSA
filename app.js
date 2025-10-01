@@ -1073,7 +1073,7 @@ function layoutRecursionTreeConnections(container) {
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.style.width = `${width}px`;
   svg.style.height = `${height}px`;
-  while (svg.firstChild) svg.firstChild.remove();
+  svg.innerHTML = '';
 
   const nodeMap = new Map();
   nodeElements.forEach(node => {
