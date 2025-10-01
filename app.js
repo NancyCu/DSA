@@ -1002,7 +1002,7 @@ function renderRecursionTree(partitionCalls) {
           `[${truncateArray(node.subarrayElements)}]` :
           node.subarray;
 
-        const parentCall = node.parentCall == null ? 'root' : node.parentCall;
+        const parentCall = (node.parentCall === null || node.parentCall === undefined) ? 'root' : node.parentCall;
 
         treeHTML += `
           <div class="triangle-node-container" data-position="${nodePosition}" style="--node-position: ${nodePosition}">
